@@ -1,0 +1,2 @@
+id	screen_name	name	created_at	url	followers_count	friends_count	statuses_count	favourites_count	listed_count	contributors_enabled	description	protected	location	lang	expanded_url
+868966136	BatmanFran	Francisco Arceo	Tue Oct 09 00:55:02 +0000 2012	http://t.co/DyDFnrlADF	164	434	5037	2503	13	False	Native Chicagoan turned New Yorker.                                                Math, Data, and Stats Geek. Enormous sap. Also, Batman.	False	New York, NY	en	http://www.linkedin.com/in/franciscojavierarceo/
