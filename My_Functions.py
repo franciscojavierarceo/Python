@@ -121,56 +121,31 @@ def auc(actual,pred):
     fpr, tpr, thresholds = metrics.roc_curve(actual, pred)
     return metrics.auc(fpr, tpr)
 
-def roc_plot(actual,pred,ttl):
+def roc_plot(actual,pred):
     import pylab as pl
     from sklearn.metrics import roc_curve, auc
     fpr, tpr, thresholds = roc_curve(actual, pred)
     roc_auc = auc(fpr, tpr)
-    print "The Area Under the ROC Curve : %f" % roc_auc
+    print "Area under the ROC curve : %f" % roc_auc
     # Plot ROC curve
     pl.clf()
     pl.plot(fpr, tpr, color='red',label='ROC curve (area = %0.2f)' % roc_auc)
     pl.plot([0, 1], [0, 1], 'k')
     pl.xlim([0.0, 1.0])
     pl.ylim([0.0, 1.0])
-    plt.grid()
-    pl.xlabel('False Positive Rate')
-    pl.ylabel('True Positive Rate')
-    pl.title('ROC Curve'+'\n'+ttl)
-    pl.legend(loc="lower right")
-    pl.show()
-
-def roc_perf(atrn,ptrn,atst,ptst):
-    import pylab as pl
-    from sklearn.metrics import roc_curve, auc
-    fprtrn, tprtrn, thresholds = roc_curve(atrn, ptrn)
-    fprtst, tprtst, thresholdstst = roc_curve(atst, ptst)
-    roc_auctrn= auc(fprtrn, tprtrn)
-    roc_auctst = auc(fprtst, tprtst)
-    print "The Training Area Under the ROC Curve : %f" % roc_auctrn
-    print "The Test Area Under the ROC Curve : %f" % roc_auctst
-    # Plot ROC curve
-    pl.clf()
-    pl.plot(fprtrn, tprtrn, color='red',label='Train AUC = %0.2f' % roc_auctrn)
-    pl.plot(fprtst, tprtst, color='blue',label='Test AUC = %0.2f' % roc_auctst)
-    pl.plot([0, 1], [0, 1], 'k')
-    pl.xlim([0.0, 1.0])
-    pl.ylim([0.0, 1.0])
-    plt.grid()
     pl.xlabel('False Positive Rate')
     pl.ylabel('True Positive Rate')
     pl.title('ROC Curve')
     pl.legend(loc="lower right")
     pl.show()
-
-
+    
 def histogram(xvar,nbins=50):
     import matplotlib.pyplot as plt
     plt.hist(xvar,bins=nbins)
+    plt.grid()
     plt.show()
     
     
-# Not yet working
 def denplot(xvar,xlbl='Variable'):
     import matplotlib.pyplot as plt
     from sklearn.neighbors.kde import KernelDensity
@@ -184,6 +159,7 @@ def denplot(xvar,xlbl='Variable'):
     plt.plot(xvar, xvar * 0, 'ok', alpha=.03)
     plt.ylim(-.001, .035)
     plt.xlabel(xlbl)
+    plt.grid()
     plt.ylabel("Density")
     plt.show()
     
@@ -194,6 +170,7 @@ def cdfplot(xvar):
     sortedvals=np.sort( xvar)
     yvals=np.arange(len(sortedvals))/float(len(sortedvals))
     plt.plot( sortedvals, yvals )
+    plt.grid()
     plt.show()
 
 def ptable(df,var,asc=False):
@@ -228,8 +205,4 @@ def scatplot(x,y,colors='blue',MyTitle='',size=1):
     import matplotlib.pyplot as plt
     plt.scatter(x, y, s=size, c=colors, alpha=0.5)
     plt.show()
-
-def lineplot(df):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    
+    plt.grid()
