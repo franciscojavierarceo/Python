@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue May  5 15:00:22 2015
+
+@author: franciscojavierarceo
+"""
+#============================================================================
+# Matrix Algebra in Python
+#============================================================================
+import numpy as np
+a = np.matrix(np.ones(shape=(12,4))) # 12 rows and 4 columns
+print "A matrix populated with 1s", a
+print "This sums down the columns", a.sum(axis=0)
+print "This sums across the rows", a.sum(axis=1)
+print "This is an identity matrix", np.identity(4)
+print "This is the dimension of a", a.shape 
+print "This is a matrix product a'a", a.dot(a.T)
+a = np.matrix('1 2; 3 4')
+print "This is another matrix", a
+print "This is the inverse of the matrix a'a"
+print np.linalg.inv(a.dot(a.T))
+#============================================================================
+# This is all reproducible in R
+#============================================================================
