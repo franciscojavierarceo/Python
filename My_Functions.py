@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 18 15:57:19 2014
-@author: farceo
-"""
+#------------------------------------------------------------------------------
+# Author: Francisco Javier Arceo
+# Purpose: These are my general purpose functions in Python. I find them
+#   to be rather useful.
+# Last Update Date: May 18th, 2015
+#------------------------------------------------------------------------------
 # To clear variables use "%reset"
 
 import numpy as np
