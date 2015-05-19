@@ -4,7 +4,7 @@
 #   to be rather useful.
 # Last Update Date: May 18th, 2015
 #------------------------------------------------------------------------------
-# To clear variables use "%reset"
+# To clear the workspace in spyder use "%reset" 
 
 import numpy as np
 import pandas as pd
