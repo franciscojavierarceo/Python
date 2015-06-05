@@ -1,10 +1,9 @@
-#------------------------------------------------------------------------------
-# Author: Francisco Javier Arceo
-# Purpose: These are my general purpose functions in Python. I find them
-#   to be rather useful.
-# Last Update Date: May 18th, 2015
-#------------------------------------------------------------------------------
-# To clear the workspace in spyder use "%reset" 
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Nov 18 15:57:19 2014
+@author: farceo
+"""
+# To clear variables use "%reset"
 
 import numpy as np
 import pandas as pd
@@ -228,6 +227,15 @@ def scatplot(x,y,colors='blue',MyTitle='',size=1):
     import matplotlib.pyplot as plt
     plt.scatter(x, y, s=size, c=colors, alpha=0.5)
     plt.show()
+
+def Build_STDM(docs, **kwargs):
+    ''' Build Spares Term Document Matrix '''
+    from sklearn.feature_extraction.text import CountVectorizer
+    import pandas as pd
+    vectorizer = CountVectorizer(**kwargs)
+    sparsematrix= vectorizer.fit_transform(docs)
+    vocab = vectorizer.vocabulary_.keys()
+    return sparsematrix, vocab
 
 def lineplot(df):
     import numpy as np
