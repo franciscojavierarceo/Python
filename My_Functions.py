@@ -1,44 +1,44 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 18 15:57:19 2014
-
 @author: farceo
 """
 # To clear variables use "%reset"
 
-import numpy as np
-import pandas as pd
-import networkx as nx
+import scipy
 import pulp
 import os
 import glob
 import sys
 import pylab
-import sklearn as sk
 import random 
+import numpy as np
+import pandas as pd
+import networkx as nx
+import sklearn as sk
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn import metrics
 from sklearn.linear_model import enet_path
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.neighbors.kde import KernelDensity
+from sklearn.metrics import roc_curve, auc
 
-def summarize(x):
-    import pandas as pd
+def summarize(mydf):
     for i in mydf.columns:
-        print i
+        print(i)
         if isinstance(np.array(mydf[i]),int)==True:
-            print np.mean(mydf[i])
+            print(np.mean(mydf[i]))
 
 def dim(mydf):
-    import pandas as pd
     out = mydf.shape
     return out
 
 def ndistinct(x):
-    import numpy as np
     out = len(np.unique(x))
-    print "There are",out,"distinct values."
+    print("There are",out,"distinct values.")
 
 def gini(actual,pred,weight=None):
-    import scipy
-    import numpy as np
-    import pandas as pd
     pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
     pdf= pdf.sort(columns='Predicted')
     if weight is None:
@@ -56,10 +56,6 @@ def normgini(actual,pred,Val=None):
     return gini(actual,pred,weight=Val) / gini(actual,actual,weight=Val)
 
 def mylift(actual,pred,weight=None,n=10,xlab='Predicted Decile',MyTitle='Model Performance Lift Chart'):
-    import scipy
-    import numpy as np
-    import pandas as pd
-    import pylab
     pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
     pdf= pdf.sort(columns='Predicted')
     if weight is None:
@@ -101,8 +97,6 @@ def mylift(actual,pred,weight=None,n=10,xlab='Predicted Decile',MyTitle='Model P
     pylab.show()
     
 def deciles(var):
-    import numpy as np
-    import pandas as pd
     out = []
     decile = [i * 10 for i in range(0,11)]
     for i in decile:
@@ -114,41 +108,33 @@ def deciles(var):
     return outdf
     
 def auc(actual,pred):
-    from sklearn import metrics
-    import scipy
-    import numpy as np
-    import pandas as pd
     fpr, tpr, thresholds = metrics.roc_curve(actual, pred)
     return metrics.auc(fpr, tpr)
 
 def roc_plot(actual,pred,ttl):
-    import pylab as pl
-    from sklearn.metrics import roc_curve, auc
     fpr, tpr, thresholds = roc_curve(actual, pred)
     roc_auc = auc(fpr, tpr)
-    print "The Area Under the ROC Curve : %f" % roc_auc
+    print("The Area Under the ROC Curve : %f" % roc_auc)
     # Plot ROC curve
-    pl.clf()
-    pl.plot(fpr, tpr, color='red',label='ROC curve (area = %0.2f)' % roc_auc)
-    pl.plot([0, 1], [0, 1], 'k')
-    pl.xlim([0.0, 1.0])
-    pl.ylim([0.0, 1.0])
+    plt.clf()
+    plt.plot(fpr, tpr, color='red',label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], 'k')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.0])
     plt.grid()
-    pl.xlabel('False Positive Rate')
-    pl.ylabel('True Positive Rate')
-    pl.title('ROC Curve'+'\n'+ttl)
-    pl.legend(loc="lower right")
-    pl.show()
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve'+'\n'+ttl)
+    plt.legend(loc="lower right")
+    plt.show()
 
 def roc_perf(atrn,ptrn,atst,ptst):
-    import pylab as pl
-    from sklearn.metrics import roc_curve, auc
     fprtrn, tprtrn, thresholds = roc_curve(atrn, ptrn)
     fprtst, tprtst, thresholdstst = roc_curve(atst, ptst)
     roc_auctrn= auc(fprtrn, tprtrn)
     roc_auctst = auc(fprtst, tprtst)
-    print "The Training Area Under the ROC Curve : %f" % roc_auctrn
-    print "The Test Area Under the ROC Curve : %f" % roc_auctst
+    print("The Training Area Under the ROC Curve : %f" % roc_auctrn)
+    print("The Test Area Under the ROC Curve : %f" % roc_auctst)
     # Plot ROC curve
     pl.clf()
     pl.plot(fprtrn, tprtrn, color='red',label='Train AUC = %0.2f' % roc_auctrn)
@@ -165,16 +151,12 @@ def roc_perf(atrn,ptrn,atst,ptst):
 
 
 def histogram(xvar,nbins=50):
-    import matplotlib.pyplot as plt
     plt.hist(xvar,bins=nbins)
     plt.show()
     
     
 # Not yet working
 def denplot(xvar,xlbl='Variable'):
-    import matplotlib.pyplot as plt
-    from sklearn.neighbors.kde import KernelDensity
-    import numpy as np
     xvar = np.array(xvar)
     xvar = xvar.reshape(-1,1)
     kde = KernelDensity(bandwidth=0.2).fit(xvar)
@@ -188,48 +170,41 @@ def denplot(xvar,xlbl='Variable'):
     plt.show()
     
 def cdfplot(xvar):
-    import matplotlib.pyplot as plt
-    from sklearn.neighbors.kde import KernelDensity
-    import numpy as np
     sortedvals=np.sort( xvar)
     yvals=np.arange(len(sortedvals))/float(len(sortedvals))
     plt.plot( sortedvals, yvals )
     plt.show()
 
 def ptable(df,var,asc=False):
-    import numpy as np
-    import pandas as pd
     outdf = df.groupby(var).count().reset_index().ix[:,0:2]
     outdf.columns = [outdf.columns[0],'Count']
     outdf = outdf.sort(columns='Count',ascending=asc)
+    outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
     return outdf
 
-
-def barplot(df,var,MyTitle="",aval=0.9):
+def barplot(df,var,MyTitle="",aval=0.9,prnt=False):
     # Taken from a pandas summary file
-    import numpy as np
-    import matplotlib.pyplot as plt
     out = ptable(df,var,asc=True)
-    indxvl = np.arange(len(out[var]))
-    fig = plt.figure(figsize=(5.5,3),dpi=100)
-    ax = fig.add_subplot(111)
-    ax.grid(True,which='both')
-    bar = ax.barh(indxvl, out['Count'], xerr=0, align='center', alpha=aval)
-    plt.yticks(indxvl, out[var])
+    if prnt == True:
+        print out
+    plt.figure(figsize=(10,5),dpi=100)
+    out.sort("Count").reset_index()
+    out[['Count']].plot(kind='barh')
+    plt.yticks(out.index, out[var])
     plt.xlabel('')
-    fnt = {'family':'normal','weight':'bold','size':10}
-    plt.rc('font',**fnt)
     plt.title(MyTitle)
-    fig.tight_layout()    
-    plt.show()
+
+
 
 def scatplot(x,y,colors='blue',MyTitle='',size=1):
-    import numpy as np
-    import matplotlib.pyplot as plt
     plt.scatter(x, y, s=size, c=colors, alpha=0.5)
     plt.show()
 
-def lineplot(df):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    
+def Build_STDM(docs, **kwargs):
+    ''' Build Spares Term Document Matrix '''
+    vectorizer = CountVectorizer(**kwargs)
+    sparsematrix= vectorizer.fit_transform(docs)
+    vocab = vectorizer.vocabulary_.keys()
+    return sparsematrix, vocab
+
+#def lineplot(df):
