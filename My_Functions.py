@@ -107,7 +107,7 @@ def deciles(var):
     outdf['Value'] = out
     return outdf
     
-def auc(actual,pred):
+def myauc(actual,pred):
     fpr, tpr, thresholds = metrics.roc_curve(actual, pred)
     return metrics.auc(fpr, tpr)
 
