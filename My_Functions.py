@@ -15,14 +15,14 @@ import random
 import numpy as np
 import pandas as pd
 import networkx as nx
-import sklearn as sk
-import seaborn as sns
+#import sklearn as sk
+#import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn import metrics
-from sklearn.linear_model import enet_path
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.neighbors.kde import KernelDensity
-from sklearn.metrics import roc_curve, auc
+#from sklearn import metrics
+#from sklearn.linear_model import enet_path
+#from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.neighbors.kde import KernelDensity
+#from sklearn.metrics import roc_curve, auc
 
 def summarize(mydf):
     for i in mydf.columns:
@@ -149,11 +149,9 @@ def roc_perf(atrn,ptrn,atst,ptst):
     plt.legend(loc="lower right")
     plt.show()
 
-
 def histogram(xvar,nbins=50):
     plt.hist(xvar,bins=nbins)
     plt.show()
-    
     
 # Not yet working
 def denplot(xvar,xlbl='Variable'):
@@ -178,23 +176,34 @@ def cdfplot(xvar):
 def ptable(df,var,asc=False):
     outdf = df.groupby(var).count().reset_index().ix[:,0:2]
     outdf.columns = [outdf.columns[0],'Count']
-    outdf = outdf.sort(columns='Count',ascending=asc)
+    outdf = outdf.sort_values(by='Count',ascending=asc)
     outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
     return outdf
 
-def barplot(df,var,MyTitle="",aval=0.9,prnt=False):
+def ptablebyv(df,var,sumvar,asc=False):
+    outdf = df[[var,sumvar]].groupby(var).sum()
+    outdf=outdf.reset_index().ix[:,0:2]
+    outdf.columns = [outdf.columns[0],'Count']
+    if asc==True:
+    	outdf = outdf.sort(columns='Count',ascending=asc)
+    outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
+    return outdf
+
+
+def barplot(df,var,MyTitle="",aval=0.9,prnt=False,prcnt=False):
     # Taken from a pandas summary file
     out = ptable(df,var,asc=True)
     if prnt == True:
         print out
-    plt.figure(figsize=(10,5),dpi=100)
-    out.sort("Count").reset_index()
-    out[['Count']].plot(kind='barh')
+    if prcnt==True:
+        out = out.sort("Percent").reset_index()
+        out[['Percent']].plot(kind='barh')
+    else:
+        out = out.sort("Count").reset_index()
+        out[['Count']].plot(kind='barh')
     plt.yticks(out.index, out[var])
     plt.xlabel('')
     plt.title(MyTitle)
-
-
 
 def scatplot(x,y,colors='blue',MyTitle='',size=1):
     plt.scatter(x, y, s=size, c=colors, alpha=0.5)
