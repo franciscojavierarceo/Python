@@ -1,12 +1,15 @@
 import os
 import math
+import keras
 import theano
 import seaborn
+import imageio
 import itertools 
 import numpy as np
 import pandas as pd
 
-import keras
+from PIL import Image
+from images2gif import writeGif
 from keras.models import Sequential
 from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Activation
@@ -65,10 +68,11 @@ def learn_mlp(X_train, y_train, X_test, y_test, nhidden=10, n_neurons=200, nepoc
     errnn = yprd_tstnn - y_test
     return yprd_tstnn, errnn
 
-def save3dfig(X, Y, Z, title, fileloc, cmapc=cm.hot):
+def save3dfig(X, Y, Z, title, fileloc, cmapc, z1, z2):
     fig = plt.figure(figsize=(12,12))
     ax = fig.gca(projection='3d')
     ax.plot_trisurf(X, Y, Z, cmap=cmapc)
+    ax.set_zlim(z1, z2)
     ax.set_title(title)
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -97,21 +101,27 @@ def runSimulation(n_iters=100):
 
     save3dfig(X_test[:,0], X_test[:,1], yprd_tst, 
         title='Approximated Step Function in 2-d \n (Gradient Boosting Trees = %i)' % n_iters, 
-        fileloc='./images/stepfunction_gbm_%s.png' % str(n_iters).zfill(4) )
+        fileloc='./images/stepfunction_gbm_%s.png' % str(n_iters).zfill(4),
+        cmapc=cm.hot,
+        z1 = 0, z2=100)
 
     save3dfig(X_test[:,0], X_test[:,1], yprd_tstnn, 
         title='Approximated Step Function in 2-d \n (Neural Network, Epochs = %i)' % n_iters, 
-        fileloc='./images/stepfunction_mlp_%s.png' % str(n_iters).zfill(4) )
+        fileloc='./images/stepfunction_mlp_%s.png' % str(n_iters).zfill(4),
+        cmapc=cm.hot,
+        z1 = -20, z2 = 140)
 
     save3dfig(X_test[:,0], X_test[:,1], err, 
         title='Residuals of Learned Step Function in 2-d \n (Gradient Boosting, Trees = %i)' % n_iters, 
         fileloc='./images/stepfunction_gbmres_%s.png' % str(n_iters).zfill(4),
-        cmapc=cm.RdBu_r)
+        cmapc=cm.RdBu_r,
+        z1 =-10, z2=10)
 
     save3dfig(X_test[:,0], X_test[:,1], errnn, 
         title='Residuals of Learned Step Function in 2-d \n (Neural Network, Epochs = %i)' % n_iters, 
         fileloc='./images/stepfunction_mlpres_%s.png' % str(n_iters).zfill(4),
-        cmapc=cm.RdBu_r)
+        cmapc=cm.RdBu_r,
+        z1 = -30, z2=30)
 
 def build_gif(model):
     file_names = []
@@ -119,10 +129,8 @@ def build_gif(model):
         if fn.startswith(model) and fn.endswith('.png'):
             file_names.append(fn)
 
-    images = []
-    for filename in file_names:
-        images.append(imageio.imread('./images/'+filename))
-    imageio.mimsave('images/%s.gif' % model.replace('_',''), images)
+    images = [Image.open('./images/'+fn) for fn in file_names ]
+    writeGif('images/%s.gif' % model.replace('_',''), images, duration=1.0)
 
 def main():
     models = [
