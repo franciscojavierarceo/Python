@@ -97,20 +97,20 @@ def runSimulation(n_iters=100):
 
     save3dfig(X_test[:,0], X_test[:,1], yprd_tst, 
         title='Approximated Step Function in 2-d \n (Gradient Boosting Trees = %i)' % n_iters, 
-        fileloc='./images/stepfunction_gbm_%i.png' % str(n_iters).zfill(4) )
+        fileloc='./images/stepfunction_gbm_%s.png' % str(n_iters).zfill(4) )
 
     save3dfig(X_test[:,0], X_test[:,1], yprd_tstnn, 
         title='Approximated Step Function in 2-d \n (Neural Network, Epochs = %i)' % n_iters, 
-        fileloc='./images/stepfunction_mlp_%i.png' % str(n_iters).zfill(4) )
+        fileloc='./images/stepfunction_mlp_%s.png' % str(n_iters).zfill(4) )
 
     save3dfig(X_test[:,0], X_test[:,1], err, 
         title='Residuals of Learned Step Function in 2-d \n (Gradient Boosting, Trees = %i)' % n_iters, 
-        fileloc='./images/stepfunction_gbmres_%i.png' % str(n_iters).zfill(4),
+        fileloc='./images/stepfunction_gbmres_%s.png' % str(n_iters).zfill(4),
         cmapc=cm.RdBu_r)
 
     save3dfig(X_test[:,0], X_test[:,1], errnn, 
         title='Residuals of Learned Step Function in 2-d \n (Neural Network, Epochs = %i)' % n_iters, 
-        fileloc='./images/stepfunction_mlpres_%i.png' % str(n_iters).zfill(4),
+        fileloc='./images/stepfunction_mlpres_%s.png' % str(n_iters).zfill(4),
         cmapc=cm.RdBu_r)
 
 def build_gif(model):
@@ -132,7 +132,7 @@ def main():
         'stepfunction_mlpres'
     ]
     for iter_val in range(1, 1000, 25):
-        runSimulation(n_iters=iter_val)
+        runSimulation(iter_val)
 
     for model in models:
         build_gif(model=model)
