@@ -18,7 +18,7 @@ from keras.regularizers import l2, activity_l2
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cross_validation import train_test_split
-from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
 from matplotlib import cm
 
 
@@ -38,8 +38,13 @@ def build_data():
     return xs, ys
 
 def learn_gbm(X_train, y_train, X_test, y_test, ntrees=1000):
-    estimator = ExtraTreesRegressor(n_estimators=ntrees, max_features='auto', 
-                            random_state=420, verbose=False)
+    estimator = GradientBoostingRegressor(
+                    n_estimators=ntrees, 
+                    max_features='auto', 
+                    random_state=420, 
+                    verbose=False,
+                    learning_rate=0.2)
+
     estimator.fit(X_train, y_train)
     yprd_tst = estimator.predict(X_test)
     err = yprd_tst - y_test
@@ -78,6 +83,7 @@ def save3dfig(X, Y, Z, title, fileloc, cmapc, z1, z2):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     plt.savefig(fileloc)
+    pl.tclose()
 
 def runSimulation(n_iters=100):
     # Create dataset
