@@ -3,7 +3,7 @@ import math
 import theano
 import seaborn
 import imageio
-import itertools 
+import itertools
 import numpy as np
 import pandas as pd
 
@@ -23,7 +23,6 @@ from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor
 from matplotlib import cm
 
-
 def build_data():
     xs = np.arange(-100,100, 0.1).reshape((2000))
     ys = np.zeros( (len(xs)))
@@ -39,22 +38,24 @@ def build_data():
 
 def learn_gbm(X_train, y_train, X_test, y_test, ntrees=10000):
     estimator = GradientBoostingRegressor(
-                    n_estimators=ntrees, 
-                    random_state=420, 
+                    n_estimators=ntrees,
+                    random_state=420,
                     verbose=False,
                     learning_rate=0.2,
                     max_depth=2)
 
-    estimator.fit(X_train, y_train)
-    yprd_tst = estimator.predict(X_test)
+    estimator.fit(X_train[:, None], y_train[:, None])
+    yprd_tst = estimator.predict(X_test[:, None])
     err = yprd_tst - y_test
     return yprd_tst, err
 
 def learn_mlp(X_train, y_train, X_test, y_test, nhidden=10, n_neurons=200, nepochs=200):
     model = Sequential()
     # Initial layer
-    model.add(Dense(n_neurons, input_dim=1, activation='relu'))
-    # Creating nhidden number of layers 
+    model.add(Dense(n_neurons,
+                    input_dim=np.minimum(X_train.shape[-1], len(X_train.shape)),
+                    activation='relu'))
+    # Creating nhidden number of layers
     for i in range(nhidden):
         model.add(Dense(n_neurons, activation='relu', W_regularizer=l2(0.01),
                         activity_regularizer=activity_l2(0.01)))
@@ -88,7 +89,7 @@ def runSimulation(n_iters=100):
     # Learn GBM
     yprd_tst, err = learn_gbm(X_train, y_train, X_test, y_test, ntrees=n_iters)
     # Learn NN (MLP)
-    yprd_tstnn, errnn = learn_mlp(X_train, y_train, X_test, y_test, 
+    yprd_tstnn, errnn = learn_mlp(X_train, y_train, X_test, y_test,
                                 nhidden=10, n_neurons=200, nepochs=n_iters)
 
     # Collecting errors
@@ -99,20 +100,20 @@ def runSimulation(n_iters=100):
     print("The RMSE of the NN is %0.3f" % rmse_nns)
     print("The GBM/NN RMSE = %0.3f" % (rmse_gbm / rmse_nns) )
 
-    save2dfig(X_test, yprd_tst, 
-        title='Approximated Step Function in 1-d \n (Gradient Boosting Trees = %i)' % n_iters, 
+    save2dfig(X_test, yprd_tst,
+        title='Approximated Step Function in 1-d \n (Gradient Boosting Trees = %i)' % n_iters,
         fileloc='./images/stepfunction_1d_gbm_%s.png' % str(n_iters).zfill(4))
 
-    save2dfig(X_test,  yprd_tstnn, 
-        title='Approximated Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters, 
+    save2dfig(X_test,  yprd_tstnn,
+        title='Approximated Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters,
         fileloc='./images/stepfunction_1d_mlp_%s.png' % str(n_iters).zfill(4))
 
-    save2dfig(X_test,  err, 
-        title='Residuals of Learned Step Function in 1-d \n (Gradient Boosting, Trees = %i)' % n_iters, 
+    save2dfig(X_test,  err,
+        title='Residuals of Learned Step Function in 1-d \n (Gradient Boosting, Trees = %i)' % n_iters,
         fileloc='./images/stepfunction_1d_gbmres_%s.png' % str(n_iters).zfill(4))
 
-    save2dfig(X_test,  errnn, 
-        title='Residuals of Learned Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters, 
+    save2dfig(X_test,  errnn,
+        title='Residuals of Learned Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters,
         fileloc='./images/stepfunction_1d_mlpres_%s.png' % str(n_iters).zfill(4))
 
 def build_gif(model):
