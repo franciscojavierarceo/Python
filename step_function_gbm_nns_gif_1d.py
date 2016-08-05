@@ -26,7 +26,6 @@ from matplotlib import cm
 def build_data():
     xs = np.arange(-100,100, 0.1).reshape((2000))
     ys = np.zeros( (len(xs)))
-    print(xs.shape, ys.shape)
     # This defines our function (i.e., f(x) = y)
     clist = [-75, -50, -25, 25, 50, 75]
     olist = [10, 25, 50, 75, 100]
@@ -44,8 +43,8 @@ def learn_gbm(X_train, y_train, X_test, y_test, ntrees=10000):
                     learning_rate=0.2,
                     max_depth=2)
 
-    estimator.fit(X_train[:, None], y_train[:, None])
-    yprd_tst = estimator.predict(X_test[:, None])
+    estimator.fit(X_train, y_train)
+    yprd_tst = estimator.predict(X_test)
     err = yprd_tst - y_test
     return yprd_tst, err
 
@@ -53,7 +52,7 @@ def learn_mlp(X_train, y_train, X_test, y_test, nhidden=10, n_neurons=200, nepoc
     model = Sequential()
     # Initial layer
     model.add(Dense(n_neurons,
-                    input_dim=np.minimum(X_train.shape[-1], len(X_train.shape)),
+                    input_dim=1,
                     activation='relu'))
     # Creating nhidden number of layers
     for i in range(nhidden):
@@ -84,9 +83,13 @@ def runSimulation(n_iters=100):
     # Create dataset
     xs, ys = build_data()
     # Split into test and training
-    X_train, X_test, y_train, y_test = train_test_split(xs, ys, test_size=0.5, random_state=420)
+    X_train, X_test, y_train, y_test = train_test_split(xs.reshape((len(xs), 1)), 
+                                                        ys.reshape((len(ys),)), 
+                                                        test_size=0.5, 
+                                                        random_state=420)
 
     # Learn GBM
+    print(X_train.shape, y_train.shape)
     yprd_tst, err = learn_gbm(X_train, y_train, X_test, y_test, ntrees=n_iters)
     # Learn NN (MLP)
     yprd_tstnn, errnn = learn_mlp(X_train, y_train, X_test, y_test,
