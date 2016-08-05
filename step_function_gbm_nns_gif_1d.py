@@ -64,10 +64,11 @@ def learn_mlp(X_train, y_train, X_test, y_test, nhidden=10, n_neurons=100, nepoc
     model.compile(loss='mse', optimizer=adam)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     model.fit(X_train, y_train,
-              nb_epoch=nepochs, batch_size=50,
+              nb_epoch=nepochs, 
+              batch_size=50,
               validation_data=(X_test, y_test),
-              callbacks=[early_stopping])
-    print('fit shit')
+              callbacks=[early_stopping], 
+              verbose=0)
 
     yprd_tstnn = model.predict(X_test)[:,0]
     errnn = yprd_tstnn - y_test
@@ -92,34 +93,36 @@ def runSimulation(n_iters=100):
     # Learn GBM
     yprd_tst, err = learn_gbm(X_train, y_train, X_test, y_test, ntrees=n_iters)
     # Learn NN (MLP)
-    # yprd_tstnn, errnn = learn_mlp(X_train, y_train, X_test, y_test,
-    #                             nhidden=10, n_neurons=200, nepochs=n_iters)
+    yprd_tstnn, errnn = learn_mlp(X_train, y_train, X_test, y_test,
+                                nhidden=10, n_neurons=200, nepochs=n_iters)
 
     # Collecting errors
     rmse_gbm = np.sqrt( ((yprd_tst - y_test)**2).sum())
-    # rmse_nns = np.sqrt( ((yprd_tstnn - y_test)**2).sum())
+    rmse_nns = np.sqrt( ((yprd_tstnn - y_test)**2).sum())
 
-    print("The RMSE of the GBM is %0.3f" % rmse_gbm)
-    # print("The RMSE of the NN is %0.3f" % rmse_nns)
-    # print("The GBM/NN RMSE = %0.3f" % (rmse_gbm / rmse_nns) )
+    print("The RMSE of the GBM is %0.3f with %i trees" % (rmse_gbm, n_iters) )
+    print("The RMSE of the NN is %0.3f with %i epochs" % (rmse_nns, n_iters) )
+    print("The GBM/NN RMSE = %0.3f" % (rmse_gbm / rmse_nns) )
 
     save2dfig(X_test, yprd_tst,
         title='Approximated Step Function in 1-d \n (Gradient Boosting Trees = %i)' % n_iters,
         fileloc='./images/stepfunction_1d_gbm_%s.png' % str(n_iters).zfill(4),
         v1=-20, v2=120, col='b')
 
-    # save2dfig(X_test,  yprd_tstnn,
-    #     title='Approximated Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters,
-    #     fileloc='./images/stepfunction_1d_mlp_%s.png' % str(n_iters).zfill(4))
+    save2dfig(X_test,  yprd_tstnn,
+        title='Approximated Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters,
+        fileloc='./images/stepfunction_1d_mlp_%s.png' % str(n_iters).zfill(4),
+        v1=-20, v2=120, col='b')
 
     save2dfig(X_test,  err,
         title='Residuals of Learned Step Function in 1-d \n (Gradient Boosting, Trees = %i)' % n_iters,
         fileloc='./images/stepfunction_1d_gbmres_%s.png' % str(n_iters).zfill(4),
         v1=-60, v2=60, col='r')
 
-    # save2dfig(X_test,  errnn,
-    #     title='Residuals of Learned Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters,
-    #     fileloc='./images/stepfunction_1d_mlpres_%s.png' % str(n_iters).zfill(4))
+    save2dfig(X_test,  errnn,
+        title='Residuals of Learned Step Function in 1-d \n (Neural Network, Epochs = %i)' % n_iters,
+        fileloc='./images/stepfunction_1d_mlpres_%s.png' % str(n_iters).zfill(4),
+        v1=-60, v2=60, col='r')
 
 def build_gif(model):
     file_names = []
@@ -133,9 +136,9 @@ def build_gif(model):
 def main():
     models = [
         'stepfunction_1d_gbm_',
-        # 'stepfunction_1d_mlp_',
-        'stepfunction_1d_gbmres'#,
-        # 'stepfunction_1d_mlpres'
+        'stepfunction_1d_mlp_',
+        'stepfunction_1d_gbmres',
+        'stepfunction_1d_mlpres'
     ]
     for iter_val in range(1, 1000, 25):
         runSimulation(iter_val)
