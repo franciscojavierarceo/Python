@@ -15,14 +15,12 @@ import random
 import numpy as np
 import pandas as pd
 import networkx as nx
+import matplotlib.pyplot as plt
 #import sklearn as sk
 #import seaborn as sns
-import matplotlib.pyplot as plt
-#from sklearn import metrics
-#from sklearn.linear_model import enet_path
-#from sklearn.feature_extraction.text import CountVectorizer
-#from sklearn.neighbors.kde import KernelDensity
-#from sklearn.metrics import roc_curve, auc
+from sklearn import metrics
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_curve, auc
 
 def summarize(mydf):
     for i in mydf.columns:
@@ -109,11 +107,11 @@ def deciles(var):
     outdf['Value'] = out
     return outdf
     
-def myauc(actual,pred):
+def myauc(actual, pred):
     fpr, tpr, thresholds = metrics.roc_curve(actual, pred)
     return metrics.auc(fpr, tpr)
 
-def roc_plot(actual,pred,ttl):
+def roc_plot(actual, pred, ttl):
     fpr, tpr, thresholds = roc_curve(actual, pred)
     roc_auc = auc(fpr, tpr)
     print("The Area Under the ROC Curve : %f" % roc_auc)
@@ -130,7 +128,7 @@ def roc_plot(actual,pred,ttl):
     plt.legend(loc="lower right")
     plt.show()
 
-def roc_perf(atrn,ptrn,atst,ptst):
+def roc_perf(atrn, ptrn, atst, ptst):
     fprtrn, tprtrn, thresholds = roc_curve(atrn, ptrn)
     fprtst, tprtst, thresholdstst = roc_curve(atst, ptst)
     roc_auctrn= auc(fprtrn, tprtrn)
@@ -154,21 +152,7 @@ def roc_perf(atrn,ptrn,atst,ptst):
 def histogram(xvar,nbins=50):
     plt.hist(xvar,bins=nbins)
     plt.show()
-    
-# Not yet working
-def denplot(xvar,xlbl='Variable'):
-    xvar = np.array(xvar)
-    xvar = xvar.reshape(-1,1)
-    kde = KernelDensity(bandwidth=0.2).fit(xvar)
-    x = np.linspace(xvar.min(), xvar.max(), len(xvar)).reshape(-1, 1)
-    density = np.exp(kde.score_samples(x))
-    plt.plot(x, density)
-    plt.plot(xvar, xvar * 0, 'ok', alpha=.03)
-    plt.ylim(-.001, .035)
-    plt.xlabel(xlbl)
-    plt.ylabel("Density")
-    plt.show()
-    
+        
 def cdfplot(xvar):
     sortedvals=np.sort( xvar)
     yvals=np.arange(len(sortedvals))/float(len(sortedvals))
@@ -191,7 +175,6 @@ def ptablebyv(df,var,sumvar,asc=False):
     outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
     return outdf
 
-
 def barplot(df,var,MyTitle="",aval=0.9,prnt=False,prcnt=False):
     # Taken from a pandas summary file
     out = ptable(df,var,asc=True)
@@ -206,10 +189,6 @@ def barplot(df,var,MyTitle="",aval=0.9,prnt=False,prcnt=False):
     plt.yticks(out.index, out[var])
     plt.xlabel('')
     plt.title(MyTitle)
-
-def scatplot(x,y,colors='blue',MyTitle='',size=1):
-    plt.scatter(x, y, s=size, c=colors, alpha=0.5)
-    plt.show()
 
 def Build_STDM(docs, **kwargs):
     ''' Build Spares Term Document Matrix '''
