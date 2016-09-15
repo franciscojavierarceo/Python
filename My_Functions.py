@@ -36,28 +36,32 @@ def dim(mydf):
 
 def ndistinct(x):
     out = len(np.unique(x))
-    print("There are",out,"distinct values.")
+    print("There are", out, "distinct values.")
 
-def gini(actual,pred,weight=None):
-    pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
-    pdf= pdf.sort(columns='Predicted')
+def gini(actual, pred, weight=None):
+    pdf= pd.DataFrame(scipy.vstack([actual, pred]).T, columns=['Actual','Predicted'],)
+    pdf= pdf.sort_values('Predicted')
+
     if weight is None:
         pdf['Weight'] = 1.0
   
     pdf['CummulativeWeight'] = np.cumsum(pdf['Weight'])
-    pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual']*pdf['Weight'])
+    pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual'] * pdf['Weight'])
     TotalWeight = sum(pdf['Weight'])
-    Numerator = sum(pdf['CummulativeWeightedActual']*pdf['Weight'])
-    Denominator = sum(pdf['Actual']*pdf['Weight']*TotalWeight)
+
+    Numerator = sum(pdf['CummulativeWeightedActual'] * pdf['Weight'])
+    Denominator = sum(pdf['Actual'] * pdf['Weight'] * TotalWeight)
     Gini = 1.0 - 2.0 * Numerator/Denominator
+
     return Gini 
 
-def normgini(actual,pred,Val=None):
-    return gini(actual,pred,weight=Val) / gini(actual,actual,weight=Val)
+def normgini(actual, pred, Val=None):
+    return gini(actual, pred, weight=Val) / gini(actual, actual, weight=Val)
 
-def mylift(actual,pred,weight=None,n=10,xlab='Predicted Decile',MyTitle='Model Performance Lift Chart'):
-    pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
-    pdf= pdf.sort(columns='Predicted')
+def mylift(actual, pred, weight=None, n=10, xlab='Predicted Decile', MyTitle='Model Performance Lift Chart'):
+
+    pdf = pd.DataFrame(scipy.hstack([actual, pred]), columns=['Actual', 'Predicted'])
+    pdf = pdf.sort_values('Predicted')
     if weight is None:
         pdf['Weight'] = 1.0
   
@@ -65,36 +69,34 @@ def mylift(actual,pred,weight=None,n=10,xlab='Predicted Decile',MyTitle='Model P
     pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual']*pdf['Weight'])
     TotalWeight = sum(pdf['Weight'])
     Numerator = sum(pdf['CummulativeWeightedActual']*pdf['Weight'])
-    Denominator = sum(pdf['Actual']*pdf['Weight']*TotalWeight)
+    Denominator = sum(pdf['Actual'] * pdf['Weight']*TotalWeight)
     Gini = 1.0 - 2.0 * Numerator/Denominator
-    NormalizedGini = Gini/ gini(pdf['Actual'],pdf['Actual'])
-    GiniTitle = 'Normalized Gini = '+ str(round(NormalizedGini,4))
+    NormalizedGini = Gini/ gini(pdf['Actual'], pdf['Actual'])
+    GiniTitle = 'Normalized Gini = '+ str(round(NormalizedGini, 4))
     
-    pdf['PredictedDecile'] = np.round(pdf['CummulativeWeight']*n /TotalWeight + 0.5,decimals=0)
+    pdf['PredictedDecile'] = np.round(pdf['CummulativeWeight']*n /TotalWeight + 0.5, decimals=0)
     pdf['PredictedDecile'][pdf['PredictedDecile'] < 1.0] = 1.0
     pdf['PredictedDecile'][pdf['PredictedDecile'] > n] = n 
     
     pdf['WeightedPrediction'] = pdf['Predicted']*pdf['Weight']
     pdf['WeightedActual'] = pdf['Actual']*pdf['Weight']
-    lift_df = pdf.groupby('PredictedDecile').agg({'WeightedPrediction': np.sum,'Weight':np.sum,'WeightedActual':np.sum,'PredictedDecile':np.size})
+    lift_df = pdf.groupby('PredictedDecile').agg(
+        {
+        'WeightedPrediction': np.sum,
+         'Weight':np.sum,
+         'WeightedActual':np.sum,
+         'PredictedDecile':np.size}
+    )
     nms = lift_df.columns.values
     nms[1] = 'Count'
+    
     lift_df.columns = nms
-    lift_df['AveragePrediction'] = lift_df['WeightedPrediction']/lift_df['Weight']
-    lift_df['AverageActual'] = lift_df['WeightedActual']/lift_df['Weight']
+    lift_df['AveragePrediction'] = lift_df['WeightedPrediction']/lift_df['Count']
+    lift_df['AverageActual'] = lift_df['WeightedActual']/lift_df['Count']
     lift_df['AverageError'] = lift_df['AverageActual']/lift_df['AveragePrediction']
     
-    d = pd.DataFrame(lift_df.index)
-    p = lift_df['AveragePrediction']
-    a = lift_df['AverageActual']
-    pylab.plot(d,p,label='Predicted',color='blue',marker='o')
-    pylab.plot(d,a,label='Actual',color='red',marker='d')
-    pylab.legend(['Predicted','Actual'])
-    pylab.title(MyTitle +'\n'+GiniTitle)
-    pylab.xlabel(xlab)
-    pylab.ylabel('Actual vs. Predicted')
-    pylab.grid()
-    pylab.show()
+    return lift_df
+
     
 def deciles(var):
     out = []
