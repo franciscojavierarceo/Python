@@ -36,29 +36,24 @@ def ndistinct(x):
     out = len(np.unique(x))
     print("There are", out, "distinct values.")
 
-def gini(actual, pred, weight=None):
-    pdf= pd.DataFrame(scipy.vstack([actual, pred]).T, columns=['Actual','Predicted'],)
-    pdf= pdf.sort_values('Predicted')
 
+def gini(actual,pred,weight=None):
+    pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
+    pdf= pdf.sort_values('Predicted')
     if weight is None:
         pdf['Weight'] = 1.0
   
     pdf['CummulativeWeight'] = np.cumsum(pdf['Weight'])
-    pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual'] * pdf['Weight'])
+    pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual']*pdf['Weight'])
     TotalWeight = sum(pdf['Weight'])
-
-    Numerator = sum(pdf['CummulativeWeightedActual'] * pdf['Weight'])
-    Denominator = sum(pdf['Actual'] * pdf['Weight'] * TotalWeight)
+    Numerator = sum(pdf['CummulativeWeightedActual']*pdf['Weight'])
+    Denominator = sum(pdf['Actual']*pdf['Weight']*TotalWeight)
     Gini = 1.0 - 2.0 * Numerator/Denominator
-
     return Gini 
-
-def normgini(actual, pred, Val=None):
-    return gini(actual, pred, weight=Val) / gini(actual, actual, weight=Val)
 
 def mylift(actual, pred, weight=None, n=10, xlab='Predicted Decile', MyTitle='Model Performance Lift Chart'):
 
-    pdf = pd.DataFrame(scipy.hstack([actual, pred]), columns=['Actual', 'Predicted'])
+    pdf = pd.DataFrame(scipy.vstack([actual, pred]).T, columns=['Actual', 'Predicted'])
     pdf = pdf.sort_values('Predicted')
     if weight is None:
         pdf['Weight'] = 1.0
@@ -94,6 +89,54 @@ def mylift(actual, pred, weight=None, n=10, xlab='Predicted Decile', MyTitle='Mo
     lift_df['AverageError'] = lift_df['AverageActual']/lift_df['AveragePrediction']
     
     return lift_df
+
+From: "francisco.arceo@cba.com.au" <francisco.arceo@cba.com.au>
+Date: Thursday, September 15, 2016 at 2:49 PM
+To: Stanley Bartlett <stanley.bartlett@cba.com.au>, Ken McNamara <Ken.McNamara@cba.com.au>
+Subject: lift
+
+
+def mylift(actual,pred,weight=None,n=10,xlab='Predicted Decile',MyTitle='Model Performance Lift Chart'):
+    pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
+    pdf= pdf.sort(columns='Predicted')
+    if weight is None:
+        pdf['Weight'] = 1.0
+  
+    pdf['CummulativeWeight'] = np.cumsum(pdf['Weight'])
+    pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual']*pdf['Weight'])
+    TotalWeight = sum(pdf['Weight'])
+    Numerator = sum(pdf['CummulativeWeightedActual']*pdf['Weight'])
+    Denominator = sum(pdf['Actual']*pdf['Weight']*TotalWeight)
+    Gini = 1.0 - 2.0 * Numerator/Denominator
+    NormalizedGini = Gini/ gini(pdf['Actual'],pdf['Actual'])
+    GiniTitle = 'Normalized Gini = '+ str(round(NormalizedGini,4))
+    
+    pdf['PredictedDecile'] = np.round(pdf['CummulativeWeight']*n /TotalWeight + 0.5,decimals=0)
+    pdf['PredictedDecile'][pdf['PredictedDecile'] < 1.0] = 1.0
+    pdf['PredictedDecile'][pdf['PredictedDecile'] > n] = n 
+    
+    pdf['WeightedPrediction'] = pdf['Predicted']*pdf['Weight']
+    pdf['WeightedActual'] = pdf['Actual']*pdf['Weight']
+    lift_df = pdf.groupby('PredictedDecile').agg({'WeightedPrediction': np.sum,'Weight':np.sum,'WeightedActual':np.sum,'PredictedDecile':np.size})
+    nms = lift_df.columns.values
+    nms[1] = 'Count'
+    lift_df.columns = nms
+    lift_df['AveragePrediction'] = lift_df['WeightedPrediction']/lift_df['Weight']
+    lift_df['AverageActual'] = lift_df['WeightedActual']/lift_df['Weight']
+    lift_df['AverageError'] = lift_df['AverageActual']/lift_df['AveragePrediction']
+    
+    d = pd.DataFrame(lift_df.index)
+    p = lift_df['AveragePrediction']
+    a = lift_df['AverageActual']
+    pylab.plot(d,p,label='Predicted',color='blue',marker='o')
+    pylab.plot(d,a,label='Actual',color='red',marker='d')
+    pylab.legend(['Predicted','Actual'])
+    pylab.title(MyTitle +'\n'+GiniTitle)
+    pylab.xlabel(xlab)
+    pylab.ylabel('Actual vs. Predicted')
+    pylab.grid()
+    pylab.show()
+
 
     
 def deciles(var):
@@ -159,11 +202,15 @@ def cdfplot(xvar):
     plt.plot( sortedvals, yvals )
     plt.show()
 
-def ptable(df,var,asc=False):
+def ptable(df, var, asc=False, topn = 100):
     outdf = df.groupby(var).count().reset_index().ix[:,0:2]
     outdf.columns = [outdf.columns[0],'Count']
-    outdf = outdf.sort_values(by='Count',ascending=asc)
+    outdf = outdf.sort_values(by='Count',ascending=asc).reset_index(drop=True)
     outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
+
+    if type(topn) == int:
+        outdf = outdf.iloc[0:(topn),:]
+        
     return outdf
 
 def ptablebyv(df,var,sumvar,asc=False):
@@ -175,20 +222,25 @@ def ptablebyv(df,var,sumvar,asc=False):
     outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
     return outdf
 
-def barplot(df,var,MyTitle="",aval=0.9,prnt=False,prcnt=False):
+def barplot(df, var, MyTitle="", aval=0.9, prnt=False, prcnt=False, topn=10):
     # Taken from a pandas summary file
-    out = ptable(df,var,asc=True)
-    if prnt == True:
-        print out
+    out = ptable(df, var, asc=False, topn=topn)
+    
     if prcnt==True:
-        out = out.sort("Percent").reset_index()
-        out[['Percent']].plot(kind='barh')
+        out = out.sort_values("Percent").reset_index()
+        out[['Percent']].plot(kind='barh', figsize=(16,8))
     else:
-        out = out.sort("Count").reset_index()
-        out[['Count']].plot(kind='barh')
+        out = out.sort_values("Count").reset_index()
+        out[['Count']].plot(kind='barh', figsize=(16,8))
+        
+    if prnt == True:
+        print(out)
+        
     plt.yticks(out.index, out[var])
     plt.xlabel('')
     plt.title(MyTitle)
+    plt.grid()
+    plt.show()
 
 def Build_STDM(docs, **kwargs):
     ''' Build Spares Term Document Matrix '''
