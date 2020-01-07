@@ -249,4 +249,39 @@ def Build_STDM(docs, **kwargs):
     vocab = vectorizer.vocabulary_.keys()
     return sparsematrix, vocab
 
-#def lineplot(df):
+
+def PooledRegression(fulldata, trainfilter, cols, ydep): 
+    '''
+    fulldata:       :pd.DataFrame:
+    trainfilter:    :bool:
+    cols:           :list:
+    ydep:           :str:    
+    '''
+    tmpdf = fulldata[ cols + [ydep] ].copy()
+    training_mean = tmpdf[trainfilter][ydep].mean()
+    training_var = tmpdf[trainfilter][ydep].var() 
+    
+    traingroup = tmpdf.ix[trainfilter].groupby(cols).agg(
+            {ydep: [len, 'sum','mean', 'var', 'max']}
+        ).reset_index()
+
+    traingroup.columns = traingroup.columns.get_level_values(0)
+    traingroup.columns = cols + ['%s_%s' % (ydep, x) for x in ['cnt','sum','mean','var','max']]
+    
+    # Here's the partial pooling component that shrinks 
+    # towards the global mean of the training data
+    traingroup['%s_mean_pooled' % ydep] = (
+            (traingroup['%s_cnt' % ydep] / training_var) * training_mean + 
+            (1. / traingroup['%s_var' % ydep]) * traingroup['%s_mean' % ydep]
+        ) / (
+            traingroup['%s_cnt' % ydep] / training_var + 1. / traingroup['%s_var' % ydep]
+    ) 
+
+    traingroup.ix[traingroup['%s_cnt' % ydep] < 2, '%s_mean_pooled' % ydep] = training_mean
+    testdf = pd.merge(fulldata, traingroup, how='left', on=cols)
+    testdf['%s_mean_pooled' % ydep] = testdf['%s_mean_pooled' % ydep].fillna(training_mean)
+    
+    return testdf[['jobId', '%s_mean_pooled' % ydep]]
+
+
+
