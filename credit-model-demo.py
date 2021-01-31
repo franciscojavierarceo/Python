@@ -2,10 +2,13 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from matplotlib import pyplot as plt
+from sklearn.metrics import roc_auc_score
 
 def liftchart(df: pd.DataFrame, actual: str, predicted: str, buckets: int=10) -> None:
     # Bucketing the predictions (Deciling is the default)
     df['predbucket'] = pd.qcut(x=df[predicted], q=buckets)
+    # Getting the performance
+    aucperf = roc_auc_score(df[actual], df[predicted])
     sdf = df[[actual, predicted, 'predbucket']].groupby(
         by=['predbucket']).agg({
         actual: [np.mean, sum, len], 
@@ -23,7 +26,7 @@ def liftchart(df: pd.DataFrame, actual: str, predicted: str, buckets: int=10) ->
     )
     plt.ylabel('Default Rate')
     plt.xlabel('Decile Value of Predicted Default')
-    plt.title('Actual vs Predicted Default Rate sorted by Predicted Decile')
+    plt.title('Actual vs Predicted Default Rate sorted by Predicted Decile \nAUC = %.3f' % aucperf)
     plt.xticks(
         np.arange(sdf.shape[0]), 
         sdf['Predicted Default Rate'].round(3)
