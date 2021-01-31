@@ -64,7 +64,7 @@ def main(n: int) -> None:
     pdf['actual'] = yclass
     # Finally, what we all came here to see
     liftchart(pdf, 'actual', 'preds', 10)
-    # What does absolute best look like?
+    # This is what it looks like when we have perfect information
     pdf['truth'] = pdf['actual'] + np.random.uniform(low=0, high=0.001, size=pdf.shape[0])
     liftchart(pdf, 'actual', 'truth', 10)
 
