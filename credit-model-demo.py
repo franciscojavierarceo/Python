@@ -61,6 +61,9 @@ def main(n: int) -> None:
     pdf['actual'] = yclass
     # Finally, what we all came here to see
     liftchart(pdf, 'actual', 'preds', 10)
+    # What does absolute best look like?
+    pdf['truth'] = pdf['actual'] + np.random.uniform(low=0, high=0.001, size=pdf.shape[0])
+    liftchart(pdf, 'actual', 'truth', 10)
 
 if __name__ == '__main__':
   main(10000)
