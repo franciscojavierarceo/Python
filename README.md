@@ -1,7 +1,7 @@
 # Python code on random things
 
-This is fairly deprecated and pretty ugly, probably too ugly to clean up.
+This is somewhat of a dumping ground of code I find useful. All of it will be focused on Python.
 
-Some of the notebooks here are useful but My_Functions.py is certainly deprecated, as well as other content in this repo. Eventually I'll clean it up...until then, please disregard!
+Some of it will be functions I find useful for things.
 
--Francisco
+Feel free to take what you'd like!

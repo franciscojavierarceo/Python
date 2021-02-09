@@ -3,42 +3,34 @@
 Created on Tue Nov 18 15:57:19 2014
 @author: farceo
 """
-# To clear variables use "%reset"
 
 import scipy
-import pulp
 import os
-import glob
 import sys
-import pylab
 import random 
 import numpy as np
 import pandas as pd
-import networkx as nx
 import matplotlib.pyplot as plt
-#import sklearn as sk
-#import seaborn as sns
 from sklearn import metrics
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, roc_auc_score
 
-def summarize(mydf):
-    for i in mydf.columns:
-        print(i)
-        if isinstance(np.array(mydf[i]),int)==True:
-            print(np.mean(mydf[i]))
+def cdfplotdata(xdf: pd.DataFrame, xcol: str):
+    
+    '''
+    Helper function to create a summary data frame of the Cumulative Percentile 
+    of a continuous feature
+    '''
+    tmp = pd.DataFrame(xdf[xcol].value_counts(normalize=True)).reset_index()
+    tmp.columns = [xcol, 'Percent']
+    tmp.sort_values(by=xcol, inplace=True)
+    tmp.reset_index(drop=True, inplace=True)
+    tmp['Cumulative Percent'] = tmp['Percent'].cumsum()
+    tmp.set_index(xcol, inplace=True)
+    return tmp['Cumulative Percent']
 
-def dim(mydf):
-    out = mydf.shape
-    return out
-
-def ndistinct(x):
-    out = len(np.unique(x))
-    print("There are", out, "distinct values.")
-
-
-def gini(actual,pred,weight=None):
-    pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
+def gini(actual: pd.Series, pred: pd.Series, weight: int=None):
+    pdf= pd.DataFrame(scipy.vstack([actual, pred]).T,columns=['Actual','Predicted'],)
     pdf= pdf.sort_values('Predicted')
     if weight is None:
         pdf['Weight'] = 1.0
@@ -87,58 +79,21 @@ def mylift(actual, pred, weight=None, n=10, xlab='Predicted Decile', MyTitle='Mo
     lift_df['AveragePrediction'] = lift_df['WeightedPrediction']/lift_df['Count']
     lift_df['AverageActual'] = lift_df['WeightedActual']/lift_df['Count']
     lift_df['AverageError'] = lift_df['AverageActual']/lift_df['AveragePrediction']
-    
-    return lift_df
 
-From: "francisco.arceo@cba.com.au" <francisco.arceo@cba.com.au>
-Date: Thursday, September 15, 2016 at 2:49 PM
-To: Stanley Bartlett <stanley.bartlett@cba.com.au>, Ken McNamara <Ken.McNamara@cba.com.au>
-Subject: lift
-
-
-def mylift(actual,pred,weight=None,n=10,xlab='Predicted Decile',MyTitle='Model Performance Lift Chart'):
-    pdf= pd.DataFrame(scipy.vstack([actual,pred]).T,columns=['Actual','Predicted'],)
-    pdf= pdf.sort(columns='Predicted')
-    if weight is None:
-        pdf['Weight'] = 1.0
-  
-    pdf['CummulativeWeight'] = np.cumsum(pdf['Weight'])
-    pdf['CummulativeWeightedActual'] = np.cumsum(pdf['Actual']*pdf['Weight'])
-    TotalWeight = sum(pdf['Weight'])
-    Numerator = sum(pdf['CummulativeWeightedActual']*pdf['Weight'])
-    Denominator = sum(pdf['Actual']*pdf['Weight']*TotalWeight)
-    Gini = 1.0 - 2.0 * Numerator/Denominator
-    NormalizedGini = Gini/ gini(pdf['Actual'],pdf['Actual'])
-    GiniTitle = 'Normalized Gini = '+ str(round(NormalizedGini,4))
-    
-    pdf['PredictedDecile'] = np.round(pdf['CummulativeWeight']*n /TotalWeight + 0.5,decimals=0)
-    pdf['PredictedDecile'][pdf['PredictedDecile'] < 1.0] = 1.0
-    pdf['PredictedDecile'][pdf['PredictedDecile'] > n] = n 
-    
-    pdf['WeightedPrediction'] = pdf['Predicted']*pdf['Weight']
-    pdf['WeightedActual'] = pdf['Actual']*pdf['Weight']
-    lift_df = pdf.groupby('PredictedDecile').agg({'WeightedPrediction': np.sum,'Weight':np.sum,'WeightedActual':np.sum,'PredictedDecile':np.size})
-    nms = lift_df.columns.values
-    nms[1] = 'Count'
-    lift_df.columns = nms
-    lift_df['AveragePrediction'] = lift_df['WeightedPrediction']/lift_df['Weight']
-    lift_df['AverageActual'] = lift_df['WeightedActual']/lift_df['Weight']
-    lift_df['AverageError'] = lift_df['AverageActual']/lift_df['AveragePrediction']
-    
     d = pd.DataFrame(lift_df.index)
     p = lift_df['AveragePrediction']
     a = lift_df['AverageActual']
-    pylab.plot(d,p,label='Predicted',color='blue',marker='o')
-    pylab.plot(d,a,label='Actual',color='red',marker='d')
-    pylab.legend(['Predicted','Actual'])
-    pylab.title(MyTitle +'\n'+GiniTitle)
-    pylab.xlabel(xlab)
-    pylab.ylabel('Actual vs. Predicted')
-    pylab.grid()
-    pylab.show()
+    plt.plot(d, p,label='Predicted', color='blue', marker='o')
+    plt.plot(d, a,label='Actual', color='red', marker='d')
+    plt.legend(['Predicted','Actual'])
+    plt.title(MyTitle +'\n'+GiniTitle)
+    plt.xlabel(xlab)
+    plt.ylabel('Actual vs. Predicted')
+    plt.grid()
+    plt.show()
 
+    return lift_df
 
-    
 def deciles(var):
     out = []
     decile = [i * 10 for i in range(0,11)]
@@ -149,10 +104,6 @@ def deciles(var):
     outdf['Decile'] = decile
     outdf['Value'] = out
     return outdf
-    
-def myauc(actual, pred):
-    fpr, tpr, thresholds = metrics.roc_curve(actual, pred)
-    return metrics.auc(fpr, tpr)
 
 def roc_plot(actual, pred, ttl):
     fpr, tpr, thresholds = roc_curve(actual, pred)
@@ -192,10 +143,7 @@ def roc_perf(atrn, ptrn, atst, ptst):
     plt.legend(loc="lower right")
     plt.show()
 
-def histogram(xvar,nbins=50):
-    plt.hist(xvar,bins=nbins)
-    plt.show()
-        
+       
 def cdfplot(xvar):
     sortedvals=np.sort( xvar)
     yvals=np.arange(len(sortedvals))/float(len(sortedvals))
@@ -284,4 +232,8 @@ def PooledRegression(fulldata, trainfilter, cols, ydep):
     return testdf[['jobId', '%s_mean_pooled' % ydep]]
 
 
+def main():
+    pass
 
+if __name__ == '__main__':
+    main()
