@@ -154,6 +154,7 @@ def plotptbyx(df: pd.DataFrame, xvar: str, yvar: str):
     plt.show()
 
 def scatterplot(df: pd.DataFrame, xvar: str, yvar: str, regline: bool=True):
+    plt.figure(figsize=(12, 8))
     plt.scatter(df[xvar], df[yvar])
     if regline:
         linear_regressor = LinearRegression()
@@ -161,6 +162,8 @@ def scatterplot(df: pd.DataFrame, xvar: str, yvar: str, regline: bool=True):
         Y_pred = linear_regressor.predict(df[xvar].values.reshape(-1, 1))
         plt.plot(df[xvar], Y_pred, color='red')
     plt.title('Scatter Plot & Regression line of \n%s and %s' % (xvar, yvar))
+    plt.xlabel(xvar)
+    plt.ylabel(yvar)
     plt.grid()
 
 def Build_STDM(docs, **kwargs):
