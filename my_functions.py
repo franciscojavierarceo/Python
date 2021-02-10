@@ -4,10 +4,7 @@ Created on Tue Nov 18 15:57:19 2014
 @author: farceo
 """
 
-import scipy
 import os
-import sys
-import random 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -16,7 +13,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 
 def cdfplotdata(xdf: pd.DataFrame, xcol: str):
-    
     '''
     Helper function to create a summary data frame of the Cumulative Percentile 
     of a continuous feature
@@ -94,17 +90,6 @@ def mylift(actual, pred, weight=None, n=10, xlab='Predicted Decile', MyTitle='Mo
 
     return lift_df
 
-def deciles(var):
-    out = []
-    decile = [i * 10 for i in range(0,11)]
-    for i in decile:
-        out.append(np.percentile(var,i))
-    
-    outdf= pd.DataFrame()
-    outdf['Decile'] = decile
-    outdf['Value'] = out
-    return outdf
-
 def roc_plot(actual, pred, ttl):
     fpr, tpr, thresholds = roc_curve(actual, pred)
     roc_auc = auc(fpr, tpr)
@@ -143,52 +128,30 @@ def roc_perf(atrn, ptrn, atst, ptst):
     plt.legend(loc="lower right")
     plt.show()
 
-       
 def cdfplot(xvar):
     sortedvals=np.sort( xvar)
     yvals=np.arange(len(sortedvals))/float(len(sortedvals))
     plt.plot( sortedvals, yvals )
     plt.show()
 
-def ptable(df, var, asc=False, topn = 100):
-    outdf = df.groupby(var).count().reset_index().ix[:,0:2]
-    outdf.columns = [outdf.columns[0],'Count']
-    outdf = outdf.sort_values(by='Count',ascending=asc).reset_index(drop=True)
-    outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
+def pt(df: pd.DataFrame, xvar: str, sortfreq: bool=True, ascending: bool=False):
+    df = pd.concat([df[xvar].value_counts(), df[xvar].value_counts(True)], axis=1)
+    df.columns = ['Count', 'Percent']
+    df.sort_values(by='Count' if sortfreq else xvar, ascending=ascending, inplace=True)
+    df['Cumulative Percent'] = df['Percent'].cumsum()
+    return df
 
-    if type(topn) == int:
-        outdf = outdf.iloc[0:(topn),:]
-        
-    return outdf
+def ptbyx(df: pd.DataFrame, xvar: str, yvar: str) -> pd.DataFrame:
+    tdf = df[[xvar, yvar]].groupby(by=xvar).agg({yvar: [len ,np.sum, np.mean]})
+    tdf.columns = tdf.columns.map(''.join) # I hate pandas multi-indexing
+    tdf.rename({ yvar +'sum': 'sum_y', yvar + 'len': 'count', yvar + 'mean': 'avg_y' }, axis=1, inplace=True)
+    return tdf.reset_index()
 
-def ptablebyv(df,var,sumvar,asc=False):
-    outdf = df[[var,sumvar]].groupby(var).sum()
-    outdf=outdf.reset_index().ix[:,0:2]
-    outdf.columns = [outdf.columns[0],'Count']
-    if asc==True:
-    	outdf = outdf.sort(columns='Count',ascending=asc)
-    outdf['Percent'] = outdf['Count'] / np.sum(outdf['Count'])
-    return outdf
-
-def barplot(df, var, MyTitle="", aval=0.9, prnt=False, prcnt=False, topn=10):
-    # Taken from a pandas summary file
-    out = ptable(df, var, asc=False, topn=topn)
-    
-    if prcnt==True:
-        out = out.sort_values("Percent").reset_index()
-        out[['Percent']].plot(kind='barh', figsize=(16,8))
-    else:
-        out = out.sort_values("Count").reset_index()
-        out[['Count']].plot(kind='barh', figsize=(16,8))
-        
-    if prnt == True:
-        print(out)
-        
-    plt.yticks(out.index, out[var])
-    plt.xlabel('')
-    plt.title(MyTitle)
-    plt.grid()
+def plotptbyx(df: pd.DataFrame, xvar: str, yvar: str):
+    tmp = ptbyx(df, xvar, yvar)
+    tmp[[xvar, 'avg_y']].plot(x=xvar, grid=True)
     plt.show()
+
 
 def Build_STDM(docs, **kwargs):
     ''' Build Spares Term Document Matrix '''
@@ -228,7 +191,6 @@ def PooledRegression(fulldata, trainfilter, cols, ydep):
     traingroup.ix[traingroup['%s_cnt' % ydep] < 2, '%s_mean_pooled' % ydep] = training_mean
     testdf = pd.merge(fulldata, traingroup, how='left', on=cols)
     testdf['%s_mean_pooled' % ydep] = testdf['%s_mean_pooled' % ydep].fillna(training_mean)
-    
     return testdf[['jobId', '%s_mean_pooled' % ydep]]
 
 
