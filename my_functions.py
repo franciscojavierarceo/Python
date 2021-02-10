@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics
+from sklearn.linear_model import LinearRegression
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 
@@ -149,9 +150,18 @@ def ptbyx(df: pd.DataFrame, xvar: str, yvar: str) -> pd.DataFrame:
 
 def plotptbyx(df: pd.DataFrame, xvar: str, yvar: str):
     tmp = ptbyx(df, xvar, yvar)
-    tmp[[xvar, 'avg_y']].plot(x=xvar, grid=True)
+    tmp[[xvar, 'avg_y']].plot(x=xvar, grid=True, figsize=(12, 8))
     plt.show()
 
+def scatterplot(df: pd.DataFrame, xvar: str, yvar: str, regline: bool=True):
+    plt.scatter(df[xvar], df[yvar])
+    if regline:
+        linear_regressor = LinearRegression()
+        linear_regressor.fit(df[xvar].values.reshape(-1, 1), df[yvar].values.reshape(-1, 1))
+        Y_pred = linear_regressor.predict(df[xvar].values.reshape(-1, 1))
+        plt.plot(df[xvar], Y_pred, color='red')
+    plt.title('Scatter Plot & Regression line of \n%s and %s' % (xvar, yvar))
+    plt.grid()
 
 def Build_STDM(docs, **kwargs):
     ''' Build Spares Term Document Matrix '''
