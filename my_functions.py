@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 18 15:57:19 2014
-@author: farceo
-"""
-
 import os
 import numpy as np
 import pandas as pd
@@ -41,7 +35,6 @@ def gini(actual: pd.Series, pred: pd.Series, weight: int=None):
     return Gini 
 
 def mylift(actual, pred, weight=None, n=10, xlab='Predicted Decile', MyTitle='Model Performance Lift Chart'):
-
     pdf = pd.DataFrame(scipy.vstack([actual, pred]).T, columns=['Actual', 'Predicted'])
     pdf = pdf.sort_values('Predicted')
     if weight is None:
