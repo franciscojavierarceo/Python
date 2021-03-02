@@ -11,5 +11,5 @@ I am quite fond of [Docker](https://www.docker.com/) and Platforms as a Service 
 Here's a one liner to get you up and running with Jupyter on any computer with Docker installed.
 
 ```
-docker run --rm -e JUPYTER_ENABLE_LAB=yes -v ~/my/folder/:/home/jovyan/work jupyter/datascience-notebook
+docker run -it -p 8888:8888 --rm -e JUPYTER_ENABLE_LAB=yes -v ~/Github/Python/:/home/jovyan/work jupyter/datascience-notebook
 ```
