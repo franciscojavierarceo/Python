@@ -2,7 +2,7 @@
 
 Generally, this repository is somewhat of a dumping ground of code I find useful. All of it is focused on Python.
 
-Feel free to take what you'd like! 
+Feel free to take what you'd like!
 
 # Docker + Jupyter
 
@@ -11,5 +11,5 @@ I am quite fond of [Docker](https://www.docker.com/) and Platforms as a Service 
 Here's a one liner to get you up and running with Jupyter on any computer with Docker installed.
 
 ```
-docker run --rm -e JUPYTER_ENABLE_LAB=yes -v ~/my/folder/:/home/jovyan/work jupyter/datascience-notebook
+docker run --rm -e -p 8888:8888 JUPYTER_ENABLE_LAB=yes -v ~/my/folder/:/home/jovyan/work jupyter/datascience-notebook
 ```
