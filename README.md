@@ -2,7 +2,7 @@
 
 Generally, this repository is somewhat of a dumping ground of code I find useful. All of it is focused on Python.
 
-Feel free to take what you'd like! 
+Feel free to take what you'd like!
 
 # Docker + Jupyter
 
