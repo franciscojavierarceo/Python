@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,6 +7,60 @@ from sklearn import metrics
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
+
+def json_parser(d, path, delim="."):
+    """
+    Parse a JSON recursively using a path and delimiter.
+    This function recursively parses a JSON by using an input path
+    splitting the delimiter and using that to extract
+    the logic path to the data.
+    Parameters
+    ----------
+    d : dict
+        JSON or Python Dictionary object
+    path : str
+        Path to the data you want to extract
+    Returns
+    -------
+        Whatever data is stored at the end of the path
+    Examples
+    --------
+    mydict = {
+        'node1': 1,
+        'node2': 2,
+        'node3': [
+            3,
+            4,
+        ],
+    }
+    >>> json_parser(mydict, 'node1')
+    1
+    >>> json_parser(mydict, 'node3.1')
+    4
+    """
+    assert isinstance(path, str), "Path must be a string"
+
+    if delim not in path:
+        path = int(path) if path.isdigit() else path
+        if isinstance(d, list):
+            n = len(d)
+            assert (path + 1) <= len(d), (
+                "List value outside of range, can only select %i elements" % n
+            )
+        else:
+            assert path in d.keys(), (
+                "'%s' is not an available key in current path. Please update." % path
+            )
+
+        return d[path]
+
+    paths = path.split(delim)
+    pkey, newpath = paths[0], ("%s" % delim).join(paths[1:])
+    pkey = int(pkey) if pkey.isdigit() else pkey
+    return json_parser(d[pkey], newpath, delim)
+
+def pp(x): 
+    print(json.dumps(json.loads(x) if type(x) in (str, bytes) else x, indent=2)) 
 
 def cdfplotdata(xdf: pd.DataFrame, xcol: str):
     '''
