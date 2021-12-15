@@ -6,6 +6,7 @@ COPY ./* /code/
 
 RUN pip install grpcio
 RUN pip install grpcio-tools
+CMD ["ls -alh"]
 
-CMD ["python", "/code/greeter_server.py"]
+#CMD ["python", "/code/greeter_server.py"]
 

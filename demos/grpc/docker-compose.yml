@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+    web:
+        build: .
+        command: python route_guide_server.py
+        volumes:
+            - .:/code
+        ports:
+            - 50051:50051
