@@ -1,3 +1,7 @@
 images/
 *.pyc
 *.DS_Store
+demos/solana/
+.vscode/
+*/.ipynb_checkpoints/*
+
