@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  web:
+    build: .
+    command: python word_count.py
+    volumes:
+      - .:/code
+#    ports:
+#      - 50051:50051
