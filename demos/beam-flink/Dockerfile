@@ -12,7 +12,5 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 RUN export JAVA_HOME
 
 RUN pip install -r /code/requirements.txt
-# RUN pip install apache-flink
-# RUN pip install pyflink
 
 CMD ["ls -alh"]

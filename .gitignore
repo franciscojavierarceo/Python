@@ -4,4 +4,6 @@ images/
 demos/solana/
 .vscode/
 */.ipynb_checkpoints/*
-
+.ipynb_checkpoints/*
+.idea/
+**/Untitled.ipynb
