@@ -8,3 +8,6 @@ demos/solana/
 .idea/
 **/Untitled.ipynb
 notebooks/metadata/
+demos/cython/build/
+demos/cython/cython_demo.cpython-38-darwin.so
+
