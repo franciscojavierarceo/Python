@@ -6,3 +6,4 @@ Here we build the `cython_demo.pyx` file by defining it in the `setup.py` file a
 ```
 $ python setup.py build_ext --inplace
 ```
+After it compiles, you can import the package and simply run it, as done in the `run.py` script
