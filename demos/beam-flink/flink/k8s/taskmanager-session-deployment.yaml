@@ -34,7 +34,7 @@ spec:
         securityContext:
           runAsUser: 9999  # refers to user _flink_ from official flink image, change if necessary
       - name: beam-worker-pool
-        image: apache/beam_python3.7_sdk
+        image: apache/beam_python3.8_sdk
         args: ["--worker_pool"]
         ports:
         - containerPort: 50000

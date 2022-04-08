@@ -46,4 +46,3 @@ spec:
         - name: job-artifacts-volume
           hostPath:
             path: /host/path/to/job/artifacts
-
