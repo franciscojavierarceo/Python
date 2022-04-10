@@ -1,28 +1,40 @@
 schema {
     query: Query
+    mutation: Mutation
 }
 
-type Post {
+type Todo {
     id: ID!
-    title: String!
     description: String!
-    created_at: String!
+    completed: Boolean!
+    dueDate: String!
 }
 
-type PostResult {
+type TodoResult {
     success: Boolean!
     errors: [String]
-    post: Post
+    todo: Todo
 }
 
-type PostsResult {
+type TodosResult {
     success: Boolean!
     errors: [String]
-    post: [Post]
+    todos: [Todo]
 }
 
 type Query {
-    listPosts: PostsResult!
-    getPost(id: ID!): PostResult!
+    todos: TodosResult!
+    todo(todoId: ID!): TodoResult!
 }
 
+type DeleteTodoResult {
+    success: Boolean!
+    errors: [String]
+}
+
+type Mutation {
+    createTodo(description: String!, dueDate: String!): TodoResult!
+    deleteTodo(todoId: ID!): DeleteTodoResult!
+    markDone(todoId: String!): TodoResult!
+    updateDueDate(todoId: String, newDate: String!): TodoResult!
+}
