@@ -1,0 +1,28 @@
+schema {
+    query: Query
+}
+
+type Post {
+    id: ID!
+    title: String!
+    description: String!
+    created_at: String!
+}
+
+type PostResult {
+    success: Boolean!
+    errors: [String]
+    post: Post
+}
+
+type PostsResult {
+    success: Boolean!
+    errors: [String]
+    post: [Post]
+}
+
+type Query {
+    listPosts: PostsResult!
+    getPost(id: ID!): PostResult!
+}
+
