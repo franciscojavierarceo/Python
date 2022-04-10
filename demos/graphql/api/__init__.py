@@ -10,8 +10,8 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.getcwd()}/todo.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-@app.route('/')
+
+@app.route("/")
 def hello():
     # return 'My First API !!'
-    return render_template('index.html')
-
+    return render_template("index.html")

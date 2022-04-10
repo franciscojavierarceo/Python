@@ -1,5 +1,6 @@
 from api import db
 
+
 class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String)
@@ -11,5 +12,5 @@ class Todo(db.Model):
             "id": self.id,
             "completed": self.completed,
             "description": self.description,
-            "due_date": str(self.due_date.strftime('%d-%m-%Y'))
+            "due_date": str(self.due_date.strftime("%d-%m-%Y")),
         }
