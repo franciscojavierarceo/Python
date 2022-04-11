@@ -11,4 +11,4 @@ demos/solana/
 notebooks/metadata/
 demos/cython/build/
 demos/cython/cython_demo.cpython-38-darwin.so
-
+**/bazel-3.2.0-installer-darwin-x86_64.sh
