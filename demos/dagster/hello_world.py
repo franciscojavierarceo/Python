@@ -12,7 +12,7 @@ def hello_cereal():
 
     return cereals
 
+
 @job
 def hello_cereal_job():
     hello_cereal()
-
