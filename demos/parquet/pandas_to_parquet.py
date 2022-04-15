@@ -21,15 +21,15 @@ def write_sample_csv():
 
 
 def main():
-    if 'example.csv' not in os.listdir("./"):
-        print('writing csv...')
+    if "example.csv" not in os.listdir("./"):
+        print("writing csv...")
         write_sample_csv()
 
     df = pd.read_csv("example.csv")
 
-    print('writing parquet file...')
+    print("writing parquet file...")
     df.to_parquet("example.parquet.gzip", compression="gzip")
-    print('...parquet file written')
+    print("...parquet file written")
 
 
 if __name__ == "__main__":

@@ -6,8 +6,7 @@ import route_guide_pb2 as route__guide__pb2
 
 
 class RouteGuideStub(object):
-    """Interface exported by the server.
-    """
+    """Interface exported by the server."""
 
     def __init__(self, channel):
         """Constructor.
@@ -16,30 +15,29 @@ class RouteGuideStub(object):
             channel: A grpc.Channel.
         """
         self.GetFeature = channel.unary_unary(
-                '/routeguide.RouteGuide/GetFeature',
-                request_serializer=route__guide__pb2.Point.SerializeToString,
-                response_deserializer=route__guide__pb2.Feature.FromString,
-                )
+            "/routeguide.RouteGuide/GetFeature",
+            request_serializer=route__guide__pb2.Point.SerializeToString,
+            response_deserializer=route__guide__pb2.Feature.FromString,
+        )
         self.ListFeatures = channel.unary_stream(
-                '/routeguide.RouteGuide/ListFeatures',
-                request_serializer=route__guide__pb2.Rectangle.SerializeToString,
-                response_deserializer=route__guide__pb2.Feature.FromString,
-                )
+            "/routeguide.RouteGuide/ListFeatures",
+            request_serializer=route__guide__pb2.Rectangle.SerializeToString,
+            response_deserializer=route__guide__pb2.Feature.FromString,
+        )
         self.RecordRoute = channel.stream_unary(
-                '/routeguide.RouteGuide/RecordRoute',
-                request_serializer=route__guide__pb2.Point.SerializeToString,
-                response_deserializer=route__guide__pb2.RouteSummary.FromString,
-                )
+            "/routeguide.RouteGuide/RecordRoute",
+            request_serializer=route__guide__pb2.Point.SerializeToString,
+            response_deserializer=route__guide__pb2.RouteSummary.FromString,
+        )
         self.RouteChat = channel.stream_stream(
-                '/routeguide.RouteGuide/RouteChat',
-                request_serializer=route__guide__pb2.RouteNote.SerializeToString,
-                response_deserializer=route__guide__pb2.RouteNote.FromString,
-                )
+            "/routeguide.RouteGuide/RouteChat",
+            request_serializer=route__guide__pb2.RouteNote.SerializeToString,
+            response_deserializer=route__guide__pb2.RouteNote.FromString,
+        )
 
 
 class RouteGuideServicer(object):
-    """Interface exported by the server.
-    """
+    """Interface exported by the server."""
 
     def GetFeature(self, request, context):
         """A simple RPC.
@@ -50,8 +48,8 @@ class RouteGuideServicer(object):
         position.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ListFeatures(self, request, context):
         """A server-to-client streaming RPC.
@@ -62,8 +60,8 @@ class RouteGuideServicer(object):
         huge number of features.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def RecordRoute(self, request_iterator, context):
         """A client-to-server streaming RPC.
@@ -72,8 +70,8 @@ class RouteGuideServicer(object):
         RouteSummary when traversal is completed.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def RouteChat(self, request_iterator, context):
         """A Bidirectional streaming RPC.
@@ -82,107 +80,155 @@ class RouteGuideServicer(object):
         while receiving other RouteNotes (e.g. from other users).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_RouteGuideServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetFeature': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetFeature,
-                    request_deserializer=route__guide__pb2.Point.FromString,
-                    response_serializer=route__guide__pb2.Feature.SerializeToString,
-            ),
-            'ListFeatures': grpc.unary_stream_rpc_method_handler(
-                    servicer.ListFeatures,
-                    request_deserializer=route__guide__pb2.Rectangle.FromString,
-                    response_serializer=route__guide__pb2.Feature.SerializeToString,
-            ),
-            'RecordRoute': grpc.stream_unary_rpc_method_handler(
-                    servicer.RecordRoute,
-                    request_deserializer=route__guide__pb2.Point.FromString,
-                    response_serializer=route__guide__pb2.RouteSummary.SerializeToString,
-            ),
-            'RouteChat': grpc.stream_stream_rpc_method_handler(
-                    servicer.RouteChat,
-                    request_deserializer=route__guide__pb2.RouteNote.FromString,
-                    response_serializer=route__guide__pb2.RouteNote.SerializeToString,
-            ),
+        "GetFeature": grpc.unary_unary_rpc_method_handler(
+            servicer.GetFeature,
+            request_deserializer=route__guide__pb2.Point.FromString,
+            response_serializer=route__guide__pb2.Feature.SerializeToString,
+        ),
+        "ListFeatures": grpc.unary_stream_rpc_method_handler(
+            servicer.ListFeatures,
+            request_deserializer=route__guide__pb2.Rectangle.FromString,
+            response_serializer=route__guide__pb2.Feature.SerializeToString,
+        ),
+        "RecordRoute": grpc.stream_unary_rpc_method_handler(
+            servicer.RecordRoute,
+            request_deserializer=route__guide__pb2.Point.FromString,
+            response_serializer=route__guide__pb2.RouteSummary.SerializeToString,
+        ),
+        "RouteChat": grpc.stream_stream_rpc_method_handler(
+            servicer.RouteChat,
+            request_deserializer=route__guide__pb2.RouteNote.FromString,
+            response_serializer=route__guide__pb2.RouteNote.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'routeguide.RouteGuide', rpc_method_handlers)
+        "routeguide.RouteGuide", rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class RouteGuide(object):
-    """Interface exported by the server.
-    """
+    """Interface exported by the server."""
 
     @staticmethod
-    def GetFeature(request,
+    def GetFeature(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/routeguide.RouteGuide/GetFeature',
+            "/routeguide.RouteGuide/GetFeature",
             route__guide__pb2.Point.SerializeToString,
             route__guide__pb2.Feature.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def ListFeatures(request,
+    def ListFeatures(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_stream(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/routeguide.RouteGuide/ListFeatures',
+            "/routeguide.RouteGuide/ListFeatures",
             route__guide__pb2.Rectangle.SerializeToString,
             route__guide__pb2.Feature.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def RecordRoute(request_iterator,
+    def RecordRoute(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.stream_unary(
+            request_iterator,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.stream_unary(request_iterator, target, '/routeguide.RouteGuide/RecordRoute',
+            "/routeguide.RouteGuide/RecordRoute",
             route__guide__pb2.Point.SerializeToString,
             route__guide__pb2.RouteSummary.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def RouteChat(request_iterator,
+    def RouteChat(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.stream_stream(
+            request_iterator,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/routeguide.RouteGuide/RouteChat',
+            "/routeguide.RouteGuide/RouteChat",
             route__guide__pb2.RouteNote.SerializeToString,
             route__guide__pb2.RouteNote.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
