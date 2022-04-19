@@ -3,7 +3,6 @@ import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn import metrics
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
