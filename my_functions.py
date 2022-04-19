@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 
 
-def json_parser(d, path, delim="."):
+def json_parser(d, path, delimiter="."):
     """
     Parse a JSON recursively using a path and delimiter.
     This function recursively parses a JSON by using an input path
@@ -16,10 +16,12 @@ def json_parser(d, path, delim="."):
     the logic path to the data.
     Parameters
     ----------
-    d : dict
+    d: dict
         JSON or Python Dictionary object
-    path : str
+    path: str
         Path to the data you want to extract
+    delimiter: str
+        Delimiter allowing you to split differently if you really need to
     Returns
     -------
         Whatever data is stored at the end of the path
@@ -40,7 +42,7 @@ def json_parser(d, path, delim="."):
     """
     assert isinstance(path, str), "Path must be a string"
 
-    if delim not in path:
+    if delimiter not in path:
         path = int(path) if path.isdigit() else path
         if isinstance(d, list):
             n = len(d)
@@ -54,10 +56,10 @@ def json_parser(d, path, delim="."):
 
         return d[path]
 
-    paths = path.split(delim)
-    pkey, newpath = paths[0], ("%s" % delim).join(paths[1:])
+    paths = path.split(delimiter)
+    pkey, newpath = paths[0], ("%s" % delimiter).join(paths[1:])
     pkey = int(pkey) if pkey.isdigit() else pkey
-    return json_parser(d[pkey], newpath, delim)
+    return json_parser(d[pkey], newpath, delimiter)
 
 
 def pp(x):
