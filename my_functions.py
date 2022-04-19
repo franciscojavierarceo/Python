@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 
 
-def json_parser(d, path, delimiter="."):
+def json_parser(d: dict, path: str, delimiter: str = "."):
     """
     Parse a JSON recursively using a path and delimiter.
     This function recursively parses a JSON by using an input path
