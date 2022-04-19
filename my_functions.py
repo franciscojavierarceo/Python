@@ -1,4 +1,5 @@
 import os
+import scipy
 import json
 import numpy as np
 import pandas as pd
@@ -247,7 +248,7 @@ def scatterplot(df: pd.DataFrame, xvar: str, yvar: str, regline: bool = True):
     plt.grid()
 
 
-def Build_STDM(docs, **kwargs):
+def build_stdm(docs, **kwargs):
     """Build Spares Term Document Matrix"""
     vectorizer = CountVectorizer(**kwargs)
     sparsematrix = vectorizer.fit_transform(docs)
@@ -255,7 +256,7 @@ def Build_STDM(docs, **kwargs):
     return sparsematrix, vocab
 
 
-def PooledRegression(fulldata, trainfilter, cols, ydep):
+def pooled_regression(fulldata, trainfilter, cols, ydep):
     """
     fulldata:       :pd.DataFrame:
     trainfilter:    :bool:
