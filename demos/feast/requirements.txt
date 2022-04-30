@@ -2,7 +2,7 @@ absl-py==1.0.0
 alembic==1.6.5
 aniso8601==7.0.0
 anyio==3.4.0
-apache-airflow==2.2.2
+apache-airflow==2.2.4
 apache-airflow-providers-ftp==2.0.1
 apache-airflow-providers-http==2.0.1
 apache-airflow-providers-imap==2.0.1
