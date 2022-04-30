@@ -29,7 +29,7 @@ def hello(id):
     parameters:
       - name: id
         in: path
-        type: int
+        type: integer
         required: true
         default: 1004
 
