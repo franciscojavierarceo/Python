@@ -1,9 +1,13 @@
-# Feast Feature Store Framework
+# Feast Feature Store Demo
 
-As outlined here: https://docs.feast.dev/getting-started/quickstart
+This is a modified demo of [Feast's feature store demo](https://docs.feast.dev/getting-started/quickstart).
 
+Here I also create a small Flask OpenAPI wrapper that lets you query
+by an ID to fetch the features for that corresponding thing.
 
-To reproduce simply run:
+This example uses Feast's pre-generated mock data for driver metrics.
+
+To run the app simply do the following:
 
 ```bash
 [main]% cd feature_repo
@@ -27,5 +31,16 @@ driver_hourly_stats from 2022-04-28 03:50:14-06:00 to 2022-04-28 21:50:07-06:00:
   'conv_rate': [0.4921093285083771, 0.3993831276893616],
   'driver_id': [1004, 1005]
  }
-
+ 
+ [main]% export FLASK_APP=hello
+ [main]% export FLASK_ENV=development
+ [main]% flask run
+ * Serving Flask app 'app' (lazy loading)
+ * Environment: development
+ * Debug mode: on
+04/30/2022 09:44:08 AM INFO: * Running on http://127.0.0.1:5000 (Press CTRL+C to quit)
+04/30/2022 09:44:08 AM INFO: * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 221-452-258
 ```
+

@@ -12,16 +12,16 @@ def get_feature_vector(id):
             "driver_hourly_stats:acc_rate",
             "driver_hourly_stats:avg_daily_trips",
         ],
-        # 'driver_id': [1004, 1005]
         entity_rows=rows,
     ).to_dict()
     return jsonify(feature_vector)
+
 
 app = Flask(__name__)
 swagger = Swagger(app)
 
 
-@app.route('/<id>/')
+@app.route("/<id>/")
 def hello(id):
     """Example endpoint returning features by id
     This is using docstrings for specifications.
@@ -54,4 +54,5 @@ def hello(id):
     return get_feature_vector(id)
 
 
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
