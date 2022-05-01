@@ -6,6 +6,7 @@ import pandas as pd
 
 store = FeatureStore(repo_path=".")
 
+
 def get_feature_vector(driver_id):
     rows = [{"driver_id": driver_id}]
     feature_vector = store.get_online_features(
@@ -19,12 +20,15 @@ def get_feature_vector(driver_id):
 
     return jsonify(feature_vector)
 
+
 def get_historical_features():
     entity_df = pd.DataFrame.from_dict(
         {
             "driver_id": [1001, 1002, 1003, 1004],
             "event_timestamp": [
                 datetime(2021, 4, 12, 10, 59, 42),
+                datetime(2021, 4, 12, 8, 12, 10),
+                datetime(2021, 4, 12, 8, 12, 10),
                 datetime(2021, 4, 12, 8, 12, 10),
             ],
         }
@@ -37,7 +41,8 @@ def get_historical_features():
             "driver_hourly_stats:avg_daily_trips",
         ],
     )
-    return jsonify(retrieval_job.to_dict())
+    return jsonify(retrieval_job.to_df().to_dict())
+
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -92,6 +97,12 @@ def hello(driver_id: int):
                 schema:
                   id: value
                   type: integer
+            event_timestamp:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: string
     """
     return get_feature_vector(driver_id)
 
