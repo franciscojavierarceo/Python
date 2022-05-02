@@ -1,10 +1,20 @@
 # Feast Feature Store Demo
 
-This is a modified demo of [Feast's feature store demo](https://docs.feast.dev/getting-started/quickstart).
+This is a modification of [Feast's feature store demo](https://docs.feast.dev/getting-started/quickstart).
 
-Here I also create a small Flask OpenAPI wrapper that lets you query
+I also create a small Flask OpenAPI wrapper that lets you query
 by an ID to fetch the features for that corresponding thing.
 
+## Goals
+
+The goal of this demo is to highlight the following:
+
+1. Querying features online
+2. Querying historical features at a point in time for analysis
+3. Creating new features and pushing them to the feature store
+4. Back-filling historical features as of a certain date
+
+## Details 
 This example uses Feast's pre-generated mock data for driver metrics.
 
 To run the app simply do the following:

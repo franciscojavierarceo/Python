@@ -109,7 +109,7 @@ def hello(driver_id: int):
 
 @app.route("/historical-features/")
 def historical():
-    """Example endpoint returning features by id
+    """Example endpoint returning all historical features
     This is using docstrings for specifications.
     ---
     responses:
