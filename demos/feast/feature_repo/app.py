@@ -47,6 +47,10 @@ def get_historical_features():
 app = Flask(__name__)
 swagger = Swagger(app)
 
+@app.route("/update/state/<driver_id>/")
+def update_driver_stats(driver_id: int):
+    return jsonify({"status_code": 200})
+
 
 @app.route("/<driver_id>/")
 def hello(driver_id: int):
