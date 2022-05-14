@@ -3,6 +3,7 @@ from feast import FeatureStore
 from flasgger import Swagger
 from datetime import datetime
 import pandas as pd
+import sqlite3
 
 store = FeatureStore(repo_path=".")
 
@@ -42,6 +43,9 @@ def get_historical_features():
         ],
     )
     return jsonify(retrieval_job.to_df().to_dict())
+
+def update_driver_data(driver_id: int):
+    return None
 
 
 app = Flask(__name__)
