@@ -17,3 +17,4 @@ feature_vector = store.get_online_features(
 ).to_dict()
 
 pprint(feature_vector)
+
