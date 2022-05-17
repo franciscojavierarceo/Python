@@ -63,3 +63,11 @@ The data looks like
 3 2022-04-14 00:00:00+00:00       1005   0.533681  0.984958              727 2022-04-28 21:29:55.788
 4 2022-04-14 01:00:00+00:00       1005   0.999158  0.559122              745 2022-04-28 21:29:55.788
 ```
+
+## Feast UI
+
+If using feast version 0.21.0 (and potentially others) you can render a Feast UI by simply running
+
+```
+feast ui
+```
