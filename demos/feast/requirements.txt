@@ -162,7 +162,7 @@ pydantic==1.9.0
 pydot==1.4.2
 pyflink==1.0
 Pygments==2.10.0
-PyJWT==1.7.1
+PyJWT==2.4.0
 pymongo==3.12.3
 pyparsing==2.4.7
 pyrsistent==0.18.0
