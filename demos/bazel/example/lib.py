@@ -1,5 +1,8 @@
+import sys
+
 def hello_world() -> None:
     print("hello world")
+    print("we are using python version {}".format(sys.version))
 
 
 def get_three() -> int:
@@ -7,7 +10,7 @@ def get_three() -> int:
 
 
 def main() -> None:
-    pass
+    hello_world()
 
 
 if __name__ == "__main__":
