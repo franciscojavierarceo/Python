@@ -24,7 +24,7 @@ def load_pipeline(cuda: bool = False):
 def generate_image(
     pipeline: StableDiffusionPipeline, cuda: bool = False, prompt: str = ""
 ):
-    print("running pipeline...")
+    print(f"running pipeline with cuda enabled = {cuda}...")
     if cuda:
         with autocast("cuda"):
             data = pipeline(prompt, guidance_scale=7.5)
@@ -36,7 +36,7 @@ def generate_image(
 
 def save_image(d):
     print("saving image...")
-    image = data["sample"]
+    image = d["sample"]
     image[0].save("tmp.png")
     print("image saved to tmp.png")
 
@@ -53,7 +53,7 @@ def main(cuda: bool = False):
 
 if __name__ == "__main__":
     try:
-        cuda_enabled = bool(sys.argv[1].title())
+        cuda_enabled = sys.argv[1] == "True"
     except Exception as e:
         print(f"didnt get config {e}")
         cuda_enabled = False
