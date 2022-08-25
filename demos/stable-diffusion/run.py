@@ -1,5 +1,6 @@
 from diffusers import StableDiffusionPipeline
 import torch
+import datetime
 import sys
 from torch import autocast
 
@@ -37,8 +38,9 @@ def generate_image(
 def save_image(d):
     print("saving image...")
     image = d["sample"]
-    image[0].save("tmp.png")
-    print("image saved to tmp.png")
+    fname = f"tmp{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
+    image[0].save(fname)
+    print(f"image saved to {fname}")
 
 
 def main(cuda: bool = False):
