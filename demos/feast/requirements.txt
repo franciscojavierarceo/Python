@@ -113,7 +113,7 @@ jupyter-core==4.9.1
 lazy-object-proxy==1.6.0
 locket==1.0.0
 lockfile==0.12.2
-Mako==1.1.6
+Mako==1.2.2
 Markdown==3.3.6
 MarkupSafe==1.1.1
 marshmallow==3.14.1
