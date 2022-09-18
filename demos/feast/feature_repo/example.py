@@ -9,7 +9,7 @@ from feast.types import Float32, Int64
 # production, you can use your favorite DWH, such as BigQuery. See Feast documentation
 # for more info.
 driver_hourly_stats = FileSource(
-    path="./feature_repo/data/driver_stats.parquet",
+    path="/Users/franciscojavierarceo/GitHub/Python/demos/feast/feature_repo/data/driver_stats.parquet",
     timestamp_field="event_timestamp",
     created_timestamp_column="created",
 )
