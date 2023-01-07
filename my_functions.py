@@ -123,7 +123,6 @@ def mylift(
     Gini = 1.0 - 2.0 * Numerator / Denominator
     NormalizedGini = Gini / gini(pdf["Actual"], pdf["Actual"])
     GiniTitle = "Normalized Gini = " + str(round(NormalizedGini, 4))
-    print(GiniTitle)
 
     pdf["PredictedDecile"] = np.round(
         pdf["CummulativeWeight"] * n / TotalWeight + 0.5, decimals=0
