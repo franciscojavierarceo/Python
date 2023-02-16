@@ -80,5 +80,5 @@ uvloop==0.17.0
 volatile==2.1.0
 watchfiles==0.17.0
 websockets==10.3
-Werkzeug==2.2.2
+Werkzeug==2.2.3
 zipp==3.8.1
