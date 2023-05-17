@@ -150,6 +150,12 @@ def historical():
                 schema:
                   id: value
                   type: integer
+            event_timestamp:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: datetime
     """
     return get_historical_features()
 
