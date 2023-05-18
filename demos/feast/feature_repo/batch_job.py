@@ -5,6 +5,7 @@ def main():
     print('simulating running a dbt batch job against sqlite3')
     td = datetime.utcnow() - timedelta(days=1)
     payload = {
+        "created": td,
         "event_timestamp": td,
         "driver_id": 1001,
         "conv_rate": 0.3,

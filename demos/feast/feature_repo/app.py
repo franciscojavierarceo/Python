@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from feast import FeatureStore
 from flasgger import Swagger
 from datetime import datetime
@@ -44,7 +44,7 @@ def get_demo_historical_features():
     )
     return jsonify(retrieval_job.to_df().to_dict())
 
-def get_onboarding_features():
+def get_onboarding_features(driver_id: int, state: str, ssn: str, dl: str):
     df = pd.DataFrame(pd.to_datetime([datetime.utcnow().date()]),
                       columns=['date_of_birth'])
     df['driver_id'] = 1002
@@ -64,7 +64,7 @@ def get_onboarding_features():
     return feature_vector
 
 def get_onboarding_score():
-    features = get_onboarding_features()
+    features = get_onboarding_features(driver_id, state, ssn, dl)
     score = calculate_onboarding_score(features)
     print(f'the calculated score is {score} with features = {features}')
     return jsonify(make_risk_decision(score))
@@ -84,10 +84,6 @@ def get_daily_features(driver_id: int):
     ).to_dict()
 
     return jsonify(feature_vector)
-
-def update_driver_data(driver_id: int):
-    return None
-
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -156,6 +152,31 @@ def onboarding():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
+    parameters:
+      - name: driver_id
+        type: integer
+        in: query
+        required: true
+        default: 1001
+
+      - name: state
+        type: string
+        in: query
+        required: true
+        default: NJ
+
+      - name: ssn
+        type: string
+        in: query
+        required: true
+        default: 123-45-6789
+
+      - name: dl
+        type: string
+        in: query
+        required: true
+        default: some-dl-number
+
     responses:
       200:
         description: A JSON of features
@@ -187,8 +208,8 @@ def onboarding():
                   id: value
                   type: number
     """
-
-    feature_vector = get_onboarding_features()
+    r = request.args
+    feature_vector = get_onboarding_features(r.get("driver_id"), r.get("state"), r.get("ssn"), r.get("dl"))
     return jsonify(feature_vector)
 
 
@@ -259,7 +280,7 @@ def score_onboarding_risk():
     return get_onboarding_score()
 
 @app.route("/daily-features/<driver_id>/")
-def driver(driver_id: int):
+def driver_daily_features(driver_id: int):
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
@@ -336,4 +357,4 @@ def driver(driver_id: int):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=True)
