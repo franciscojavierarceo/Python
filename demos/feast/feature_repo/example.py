@@ -23,6 +23,12 @@ driver_hourly_stats = FileSource(
     created_timestamp_column="created",
 )
 
+driver_yesterdays_stats = FileSource(
+    path=os.path.abspath("data/driver_stats_yesterday.parquet"),
+    timestamp_field="event_timestamp",
+    created_timestamp_column="created",
+)
+
 # Define an entity for the driver. You can think of entity as a primary key used to
 # fetch features.
 driver = Entity(
@@ -45,6 +51,23 @@ driver_hourly_stats_view = FeatureView(
     ],
     online=True,
     source=driver_hourly_stats,
+    tags={},
+)
+
+driver_yesterdays_stats_view = FeatureView(
+    name="driver_yesterdays_stats",
+    entities=[driver],
+    ttl=timedelta(days=2),
+    schema=[
+        Field(name="conv_rate", dtype=Float32),
+        Field(name="acc_rate", dtype=Float32),
+        Field(name="avg_daily_trips", dtype=Int64),
+        Field(name="yesterdays_avg_daily_trips_lt_10", dtype=Int64),
+        Field(name="yesterdays_acc_rate_lt_01", dtype=Int64),
+        Field(name="yesterdays_conv_rate_gt_80", dtype=Int64),
+    ],
+    online=True,
+    source=driver_yesterdays_stats,
     tags={},
 )
 

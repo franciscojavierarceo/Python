@@ -4,11 +4,11 @@ from flasgger import Swagger
 from datetime import datetime
 import pandas as pd
 import sqlite3
+from ml import *
 
 store = FeatureStore(repo_path=".")
 
-
-def get_feature_vector(driver_id):
+def get_demo_feature_vector(driver_id: int):
     rows = [{"driver_id": driver_id}]
     feature_vector = store.get_online_features(
         features=[
@@ -22,7 +22,7 @@ def get_feature_vector(driver_id):
     return jsonify(feature_vector)
 
 
-def get_historical_features():
+def get_demo_historical_features():
     entity_df = pd.DataFrame.from_dict(
         {
             "driver_id": [1001, 1002, 1003, 1004],
@@ -44,6 +44,47 @@ def get_historical_features():
     )
     return jsonify(retrieval_job.to_df().to_dict())
 
+def get_onboarding_features():
+    df = pd.DataFrame(pd.to_datetime([datetime.utcnow().date()]),
+                      columns=['date_of_birth'])
+    df['driver_id'] = 1002
+    df['state'] = 'NJ'
+    df['ssn'] = '123-45-6789'
+    df['dl'] = 'asdfpoijpasdf'
+
+    feature_vector = store.get_online_features(
+        features=[
+            "transformed_onboarding:is_gt_18_years_old",
+            "transformed_onboarding:is_valid_state",
+            "transformed_onboarding:is_previously_seen_ssn",
+            "transformed_onboarding:is_previously_seen_dl",
+        ],
+        entity_rows=[df.loc[0].to_dict()],
+    ).to_dict()
+    return feature_vector
+
+def get_onboarding_score():
+    features = get_onboarding_features()
+    score = calculate_onboarding_score(features)
+    print(f'the calculated score is {score} with features = {features}')
+    return jsonify(make_risk_decision(score))
+
+def get_daily_features(driver_id: int):
+    rows = [{"driver_id": driver_id}]
+    feature_vector = store.get_online_features(
+        features=[
+            "driver_yesterdays_stats:conv_rate",
+            "driver_yesterdays_stats:acc_rate",
+            "driver_yesterdays_stats:avg_daily_trips",
+            "driver_yesterdays_stats:yesterdays_avg_daily_trips_lt_10",
+            "driver_yesterdays_stats:yesterdays_acc_rate_lt_01",
+            "driver_yesterdays_stats:yesterdays_conv_rate_gt_80",
+        ],
+        entity_rows=rows,
+    ).to_dict()
+
+    return jsonify(feature_vector)
+
 def update_driver_data(driver_id: int):
     return None
 
@@ -51,13 +92,9 @@ def update_driver_data(driver_id: int):
 app = Flask(__name__)
 swagger = Swagger(app)
 
-@app.route("/update/state/<driver_id>/")
-def update_driver_stats(driver_id: int):
-    return jsonify({"status_code": 200})
-
 
 @app.route("/<driver_id>/")
-def hello(driver_id: int):
+def driver(driver_id: int):
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
@@ -112,7 +149,48 @@ def hello(driver_id: int):
                   id: value
                   type: string
     """
-    return get_feature_vector(driver_id)
+    return get_demo_feature_vector(driver_id)
+
+@app.route("/onboarding-features/")
+def onboarding():
+    """Example endpoint returning features by id
+    This is using docstrings for specifications.
+    ---
+    responses:
+      200:
+        description: A JSON of features
+        schema:
+          id: Features
+          properties:
+            is_gt_18_years_old:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            is_valid_state:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            is_previously_seen_ssn:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            is_previously_seen_dl:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+    """
+
+    feature_vector = get_onboarding_features()
+    return jsonify(feature_vector)
+
 
 
 @app.route("/historical-features/")
@@ -157,7 +235,104 @@ def historical():
                   id: value
                   type: datetime
     """
-    return get_historical_features()
+    return get_demo_historical_features()
+
+
+@app.route("/onboarding-risk/")
+def score_onboarding_risk():
+    """Example endpoint returning features by id
+    This is using docstrings for specifications.
+    ---
+    responses:
+      200:
+        description: A Decision about onboarding socre
+        schema:
+          id: Score
+          properties:
+            score:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+    """
+    return get_onboarding_score()
+
+@app.route("/daily-features/<driver_id>/")
+def driver(driver_id: int):
+    """Example endpoint returning features by id
+    This is using docstrings for specifications.
+    ---
+    parameters:
+      - name: driver_id
+        in: path
+        type: integer
+        required: true
+        default: 1001
+
+    definitions:
+      DriverId:
+        type: object
+        properties:
+          id_name:
+            type: integer
+
+    responses:
+      200:
+        description: A JSON of features
+        schema:
+          id: Features
+          properties:
+            acc_rate:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            conv_rate:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            avg_daily_trips:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            yesterdays_avg_daily_trips_lt_10:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            yesterdays_acc_rate_lt_01:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            yesterdays_conv_rate_gt_80:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+            driver_id:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: integer
+            event_timestamp:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: string
+    """
+    return get_daily_features(driver_id)
 
 
 if __name__ == "__main__":
