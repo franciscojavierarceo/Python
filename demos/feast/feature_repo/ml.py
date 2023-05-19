@@ -1,4 +1,3 @@
-
 def calculate_onboarding_score(features) -> float:
     # intercept
     score = 0.03
