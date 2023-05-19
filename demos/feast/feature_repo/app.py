@@ -44,10 +44,10 @@ def get_demo_historical_features():
     )
     return jsonify(retrieval_job.to_df().to_dict())
 
-def get_onboarding_features(driver_id: int, state: str, ssn: str, dl: str):
+def get_onboarding_features(state: str, ssn: str, dl: str):
     df = pd.DataFrame(pd.to_datetime([datetime.utcnow().date()]),
                       columns=['date_of_birth'])
-    df['driver_id'] = 1002
+    df['driver_id'] = 1
     df['state'] = 'NJ'
     df['ssn'] = '123-45-6789'
     df['dl'] = 'asdfpoijpasdf'
@@ -63,11 +63,11 @@ def get_onboarding_features(driver_id: int, state: str, ssn: str, dl: str):
     ).to_dict()
     return feature_vector
 
-def get_onboarding_score():
-    features = get_onboarding_features(driver_id, state, ssn, dl)
+def get_onboarding_score(state, ssn, dl):
+    features = get_onboarding_features(state, ssn, dl)
     score = calculate_onboarding_score(features)
-    print(f'the calculated score is {score} with features = {features}')
-    return jsonify(make_risk_decision(score))
+    print(f'the calculated onboarding risk score is {score} with features = {features}')
+    return score
 
 def get_daily_features(driver_id: int):
     rows = [{"driver_id": driver_id}]
@@ -83,7 +83,14 @@ def get_daily_features(driver_id: int):
         entity_rows=rows,
     ).to_dict()
 
-    return jsonify(feature_vector)
+    return feature_vector
+
+def get_daily_score(driver_id: int):
+    features = get_daily_features(driver_id)
+    score = calculate_daily_score(features)
+    print(f'the calculated daily risk score is {score} with features = {features}')
+    return make_risk_decision(score)
+
 
 app = Flask(__name__)
 swagger = Swagger(app)
@@ -153,12 +160,6 @@ def onboarding():
     This is using docstrings for specifications.
     ---
     parameters:
-      - name: driver_id
-        type: integer
-        in: query
-        required: true
-        default: 1001
-
       - name: state
         type: string
         in: query
@@ -209,7 +210,7 @@ def onboarding():
                   type: number
     """
     r = request.args
-    feature_vector = get_onboarding_features(r.get("driver_id"), r.get("state"), r.get("ssn"), r.get("dl"))
+    feature_vector = get_onboarding_features(r.get("state"), r.get("ssn"), r.get("dl"))
     return jsonify(feature_vector)
 
 
@@ -259,11 +260,29 @@ def historical():
     return get_demo_historical_features()
 
 
-@app.route("/onboarding-risk/")
+@app.route("/onboarding-risk-score/")
 def score_onboarding_risk():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
+    parameters:
+      - name: state
+        type: string
+        in: query
+        required: true
+        default: NJ
+
+      - name: ssn
+        type: string
+        in: query
+        required: true
+        default: 123-45-6789
+
+      - name: dl
+        type: string
+        in: query
+        required: true
+        default: some-dl-number
     responses:
       200:
         description: A Decision about onboarding socre
@@ -277,7 +296,49 @@ def score_onboarding_risk():
                   id: value
                   type: number
     """
-    return get_onboarding_score()
+    r = request.args
+    score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"))
+    return jsonify(score)
+
+@app.route("/onboarding-risk-decision/")
+def score_onboarding_risk():
+    """Example endpoint returning features by id
+    This is using docstrings for specifications.
+    ---
+    parameters:
+      - name: state
+        type: string
+        in: query
+        required: true
+        default: NJ
+
+      - name: ssn
+        type: string
+        in: query
+        required: true
+        default: 123-45-6789
+
+      - name: dl
+        type: string
+        in: query
+        required: true
+        default: some-dl-number
+    responses:
+      200:
+        description: A Decision about onboarding socre
+        schema:
+          id: Decision
+          properties:
+            score:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: string
+    """
+    r = request.args
+    score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"))
+    return jsonify(make_risk_decision(score))
 
 @app.route("/daily-features/<driver_id>/")
 def driver_daily_features(driver_id: int):
@@ -353,8 +414,43 @@ def driver_daily_features(driver_id: int):
                   id: value
                   type: string
     """
-    return get_daily_features(driver_id)
+    return jsonify(get_daily_features(driver_id))
 
+
+@app.route("/daily-risk/<driver_id>/")
+def driver_daily_risk(driver_id: int):
+    """Example endpoint returning features by id
+    This is using docstrings for specifications.
+    ---
+    parameters:
+      - name: driver_id
+        in: path
+        type: integer
+        required: true
+        default: 1001
+
+    definitions:
+      DriverId:
+        type: object
+        properties:
+          id_name:
+            type: integer
+
+    responses:
+      200:
+        description: A Decision about onboarding socre
+        schema:
+          id: Score
+          properties:
+            score:
+              type: array
+              items:
+                schema:
+                  id: value
+                  type: number
+    """
+    score = get_daily_score(driver_id)
+    return jsonify(make_risk_decision(score))
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=True)
