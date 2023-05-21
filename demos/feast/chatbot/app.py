@@ -1,17 +1,10 @@
 from flask import Flask, render_template, request
 from flask import jsonify
-#from chatterbot import ChatBot
-#from chatterbot.trainers import ChatterBotCorpusTrainer
+import random
+import datetime
 
 #Flask initialization
 app = Flask(__name__)
-#chatbot=ChatBot('Pythonscholar')
-
-# Create a new trainer for the chatbot
-#trainer = ChatterBotCorpusTrainer(chatbot)
-# Now let us train our bot with multiple corpus
-
-#trainer.train("chatterbot.corpus.english.greetings","chatterbot.corpus.english.conversations")
 
 @app.route("/")
 def index():
@@ -25,9 +18,20 @@ def hello():
 @app.route("/chat", methods=["GET","POST"])
 def chatbot_response():
     print(request.data)
+    messages = [
+        'this is an example response',
+        'this is another example response',
+        'this is another response',
+        'this too is a response',
+        'blah blah blah',
+
+    ]
+    random.seed(datetime.datetime.now().timestamp())
     #msg = request.form["msg"]
     #response = chatbot.get_response(msg)
-    return jsonify({"msg": "this is a test"})
+    
+
+    return jsonify({"msg": random.choice(messages)})
 
 if __name__ == "__main__":
  app.run(debug=True)

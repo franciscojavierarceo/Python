@@ -8,7 +8,7 @@
     <div class="row">
       <div class="col-md-10 mr-auto ml-auto">
         <h1>Assistant</h1>
-        <form onsubmit="call_chatbot()">
+        <form onsubmit="call_chatbot(event)">
           <div id="chatbox">
             <div class="col-md-8 ml-auto mr-auto">
               <p class="botText"><span>Hi! I'm your Bot.<br>
@@ -26,63 +26,35 @@
       </div>
     </div>
     <script>
-      document.addEventListener('submit', (e) => {
-    // Store reference to form to make later code easier to read
-    const form = e.target;
+  async function call_chatbot(event) {
+    event.preventDefault();
 
-    // Post data using the Fetch API
-    fetch(form.action, {
-        method: form.method,
-        body: new FormData(form),
-    })
-        // We turn the response into text as we expect HTML
-        .then((res) => res.text())
+    let userTextElement = document.createElement('p');
+    let botTextElement = document.createElement('p');
 
-        // Let's turn it into an HTML document
-        .then((text) => new DOMParser().parseFromString(text, 'text/html'))
+    let userInput = document.getElementById('text').value;
+    userTextElement.innerHTML = "<span>" + userInput + "</span>";
+    userTextElement.className = 'userText';
 
-        // Now we have a document to work with let's replace the <form>
-        .then((doc) => {
-            // Create result message container and copy HTML from doc
-            const result = document.createElement('div');
-            result.innerHTML = doc.body.innerHTML;
+    document.getElementById('chatbox').appendChild(userTextElement);
 
-            // Allow focussing this element with JavaScript
-            result.tabIndex = -1;
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({"msg": userInput}),
+    });
 
-            // And replace the form with the response children
-            form.parentNode.replaceChild(result, form);
+    const data = await response.json();
+    botTextElement.innerHTML = "<span>" + data['msg'] + "</span>";
+    botTextElement.className = 'botText';
 
-            // Move focus to the status message
-            result.focus();
-        })
-        .catch((err) => {
-            // Some form of connection failure
-            form.querySelector('[role=alert]').hidden = false;
-        });
+    document.getElementById('chatbox').appendChild(botTextElement);
 
-    // Make sure connection failure message is hidden
-    form.querySelector('[role=alert]').hidden = true;
-
-    // Prevent the default form submit
-    e.preventDefault();
-});
-      async function call_chatbot() {
-        const response = fetch("/chat", {
-          method: "POST", 
-          body: JSON.stringify({"msg": "this is a test"}),
-        }).then((d) => {
-          const data = d.json();
-          console.log("data = " + data);
-          r = document.getElementsByClassName("col-md-8");
-          var t = document.createElement('p');
-          rawText = data['msg'];
-          t.innerHTML = "<span>" + rawText + "</span>";
-          t.className = 'userText';
-          r[r.length-1].appendChild(t);
-        });
-      };
-
+    document.getElementById('text').value = '';
+  };
+    /*
       $(document).ready(function() {
         $("form").on("submit", function(event) {
           var rawText = $("#text").val();
@@ -109,7 +81,7 @@
           });
           event.preventDefault();
         });
-      });
+      }); */
     </script>
   </body>
 </html>
