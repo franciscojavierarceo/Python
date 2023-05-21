@@ -19,7 +19,7 @@
           <div id="userInput" class="row">
             <div class="col-md-10">
               <input id="text" type="text" name="msg" placeholder="Message" class="form-control">
-              <button type="submit" id="send" class="btn btn-warning">Send</button>
+              <button type="submit" id="send" class="btn btn-primary">Send</button>
             </div>
           </div>
         </form>
@@ -28,16 +28,12 @@
     <script>
   async function call_chatbot(event) {
     event.preventDefault();
-
     let userTextElement = document.createElement('p');
     let botTextElement = document.createElement('p');
-
     let userInput = document.getElementById('text').value;
     userTextElement.innerHTML = "<span>" + userInput + "</span>";
     userTextElement.className = 'userText';
-
     document.getElementById('chatbox').appendChild(userTextElement);
-
     const response = await fetch("/chat", {
       method: "POST",
       headers: {
@@ -45,43 +41,12 @@
       },
       body: JSON.stringify({"msg": userInput}),
     });
-
     const data = await response.json();
     botTextElement.innerHTML = "<span>" + data['msg'] + "</span>";
     botTextElement.className = 'botText';
-
     document.getElementById('chatbox').appendChild(botTextElement);
-
     document.getElementById('text').value = '';
   };
-    /*
-      $(document).ready(function() {
-        $("form").on("submit", function(event) {
-          var rawText = $("#text").val();
-          var userHtml = ` < p class = \"userText\" > < span > ` + rawText + ` < /span> < /p>`;
-          $("#text").val("");
-          $("#chatbox").append(userHtml);
-          document.getElementById("userInput").scrollIntoView({
-            block: "start",
-            behavior: "smooth",
-          });
-          $.ajax({
-            data: {
-              msg: rawText,
-            },
-            type: "POST",
-            url: " /chat",
-          }).done(function(data) {
-            var botHtml = " < p class = \"botText\" > < span > " + data + " < /span> < /p>";
-            $("#chatbox").append($.parseHTML(botHtml));
-            document.getElementById("userInput").scrollIntoView({
-              block: "start",
-              behavior: "smooth",
-            });
-          });
-          event.preventDefault();
-        });
-      }); */
     </script>
   </body>
 </html>
