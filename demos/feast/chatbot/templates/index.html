@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css')}}" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col-md-10 mr-auto ml-auto">
+        <h1>Assistant</h1>
+        <form onsubmit="call_chatbot()">
+          <div id="chatbox">
+            <div class="col-md-8 ml-auto mr-auto">
+              <p class="botText"><span>Hi! I'm your Bot.<br>
+                I'm here to help you serve our customers faster! I may occassionally get some things wrong, so if I do feel free to let the team know!</span>
+              </p>
+            </div>
+          </div>
+          <div id="userInput" class="row">
+            <div class="col-md-10">
+              <input id="text" type="text" name="msg" placeholder="Message" class="form-control">
+              <button type="submit" id="send" class="btn btn-warning">Send</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('submit', (e) => {
+    // Store reference to form to make later code easier to read
+    const form = e.target;
+
+    // Post data using the Fetch API
+    fetch(form.action, {
+        method: form.method,
+        body: new FormData(form),
+    })
+        // We turn the response into text as we expect HTML
+        .then((res) => res.text())
+
+        // Let's turn it into an HTML document
+        .then((text) => new DOMParser().parseFromString(text, 'text/html'))
+
+        // Now we have a document to work with let's replace the <form>
+        .then((doc) => {
+            // Create result message container and copy HTML from doc
+            const result = document.createElement('div');
+            result.innerHTML = doc.body.innerHTML;
+
+            // Allow focussing this element with JavaScript
+            result.tabIndex = -1;
+
+            // And replace the form with the response children
+            form.parentNode.replaceChild(result, form);
+
+            // Move focus to the status message
+            result.focus();
+        })
+        .catch((err) => {
+            // Some form of connection failure
+            form.querySelector('[role=alert]').hidden = false;
+        });
+
+    // Make sure connection failure message is hidden
+    form.querySelector('[role=alert]').hidden = true;
+
+    // Prevent the default form submit
+    e.preventDefault();
+});
+      async function call_chatbot() {
+        const response = fetch("/chat", {
+          method: "POST", 
+          body: JSON.stringify({"msg": "this is a test"}),
+        }).then((d) => {
+          const data = d.json();
+          console.log("data = " + data);
+          r = document.getElementsByClassName("col-md-8");
+          var t = document.createElement('p');
+          rawText = data['msg'];
+          t.innerHTML = "<span>" + rawText + "</span>";
+          t.className = 'userText';
+          r[r.length-1].appendChild(t);
+        });
+      };
+
+      $(document).ready(function() {
+        $("form").on("submit", function(event) {
+          var rawText = $("#text").val();
+          var userHtml = ` < p class = \"userText\" > < span > ` + rawText + ` < /span> < /p>`;
+          $("#text").val("");
+          $("#chatbox").append(userHtml);
+          document.getElementById("userInput").scrollIntoView({
+            block: "start",
+            behavior: "smooth",
+          });
+          $.ajax({
+            data: {
+              msg: rawText,
+            },
+            type: "POST",
+            url: " /chat",
+          }).done(function(data) {
+            var botHtml = " < p class = \"botText\" > < span > " + data + " < /span> < /p>";
+            $("#chatbox").append($.parseHTML(botHtml));
+            document.getElementById("userInput").scrollIntoView({
+              block: "start",
+              behavior: "smooth",
+            });
+          });
+          event.preventDefault();
+        });
+      });
+    </script>
+  </body>
+</html>
