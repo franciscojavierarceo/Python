@@ -12,12 +12,9 @@ def generate_new_data() -> None:
         "avg_daily_trips": 200,
     }
     df = pd.DataFrame([payload])
-    df.to_parquet("./data/driver_stats_new.parquet", allow_truncated_timestamps=True)
-
-
-def main():
-    generate_new_data()
-
+    outpath = "./feature_repo/data/driver_stats_new.parquet"
+    df.to_parquet(outpath, allow_truncated_timestamps=True)
+    print(f'data written to {outpath}')
 
 if __name__ == "__main__":
-    main()
+    generate_new_data()

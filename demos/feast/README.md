@@ -1,60 +1,78 @@
-# Feast Feature Store Demo
+# A Feast Risk Feature Store Demo
 
-This is a modification of [Feast's feature store demo](https://docs.feast.dev/getting-started/quickstart).
+This is a modification of [Feast's feature store demo](https://docs.feast.dev/getting-started/quickstart) 
+to create an OpenAPI wrapper that allows you to browse the endpoints, simulate a user experience, and 
+run a real-time machine learning model*.
 
-I also create a small Flask OpenAPI wrapper that lets you query
-by an ID to fetch the features for that corresponding thing.
+*Note: this example uses a simple weighted sum of integers that stay between [0,1] for simplicity.
+In practice, a real machine learning model can be swamped in but that is not the focus of this demonstration.*
 
 ## Goals
 
-The goal of this demo is to highlight the following:
+0. Build Feast using Poetry
+1. Use Feast to query Batch and On-Demand features 
+2. Materialize data into Feast's Online Store
+3. Retrieving online features to run an online model
+4. Simulate the a simple batch job to generate more features and materialize them
+5. Run a batch model on some cadence to update a user experience
 
-1. Querying features online
-2. Querying historical features at a point in time for analysis
-3. Creating new features and pushing them to the feature store
-4. Back-filling historical features as of a certain date
-
-## Details 
-This example uses Feast's pre-generated mock data for driver metrics.
-
-To run the app simply do the following:
-
+## Getting started
 ```bash
-[main]% cd feature_repo
-[main]% feast apply
-Created entity driver
-Created feature view driver_hourly_stats
-
-Created sqlite table feature_repo_driver_hourly_stats
-
-[main]% CURRENT_TIME=$(date -u +"%Y-%m-%dT%H:%M:%S")
-[main]% feast materialize-incremental $CURRENT_TIME
-Materializing 1 feature views to 2022-04-28 21:50:07-06:00 into the sqlite online store.
-
-driver_hourly_stats from 2022-04-28 03:50:14-06:00 to 2022-04-28 21:50:07-06:00:
-100%|████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 389.52it/s]
-
-[main]% python print_features.py 
-{
-  'acc_rate': [0.039190519601106644, 0.9062243103981018],
-  'avg_daily_trips': [693, 274],
-  'conv_rate': [0.4921093285083771, 0.3993831276893616],
-  'driver_id': [1004, 1005]
- }
- 
- [main]% export FLASK_APP=hello
- [main]% export FLASK_ENV=development
- [main]% flask run
- * Serving Flask app 'app' (lazy loading)
- * Environment: development
- * Debug mode: on
-04/30/2022 09:44:08 AM INFO: * Running on http://127.0.0.1:5000 (Press CTRL+C to quit)
-04/30/2022 09:44:08 AM INFO: * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 221-452-258
+pyenv use 3.8
+poetry shell
+poetry install
+python generate_data.py
+python batch_job.py
 ```
 
-The data looks like
+Then you can run
+
+```bash
+cd feature_repo/
+% feast apply
+Created entity driver
+Created feature view driver_yesterdays_stats
+Created feature view driver_hourly_stats
+Created on demand feature view transformed_onboarding
+
+Created sqlite table feature_repo_driver_hourly_stats
+Created sqlite table feature_repo_driver_yesterdays_stats
+```
+
+Then to insert records into the table you can run
+```bash
+% CURRENT_TIME=$(date -u +"%Y-%m-%dT%H:%M:%S")
+% feast materialize-incremental $CURRENT_TIME
+Materializing 2 feature views to 2023-05-26 08:34:05-07:00 into the sqlite online store.
+
+driver_yesterdays_stats from 2023-05-24 15:34:12-07:00 to 2023-05-26 08:34:05-07:00:
+100%|████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 118.92it/s]
+driver_hourly_stats from 2013-05-28 15:34:12-07:00 to 2023-05-26 08:34:05-07:00:
+100%|███████████████████████████████████████████████████████████████| 5/5 [00:00<00:00, 3359.74it/s]
+```
+And you're done!
+
+# Flask Demo
+
+After getting Feast configured and materialized, you can then run a web server to demo our little Driver Risk application.
+
+This can be done by running
+```bash
+[main]% python app.py
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+```
+
+Then navigate to http://127.0.0.1:5000/apidocs/ and you can see the endpoints.
+
+## Data Details 
+This example uses Feast's pre-generated mock data for driver metrics.
+
+The data looks something like the sample below (the time stamp may differ)
 ```
             event_timestamp  driver_id  conv_rate  acc_rate  avg_daily_trips                 created
 0 2022-04-13 21:00:00+00:00       1005   0.409039  0.631994              359 2022-04-28 21:29:55.788
@@ -64,10 +82,20 @@ The data looks like
 4 2022-04-14 01:00:00+00:00       1005   0.999158  0.559122              745 2022-04-28 21:29:55.788
 ```
 
+I generate additional samples of this data using some very trivial scripts to simulate what happens in live customer-facing experiences and what happens behind the scenes through common batch jobs.
+
 ## Feast UI
 
-If using feast version 0.21.0 (and potentially others) you can render a Feast UI by simply running
-
+This demo uses Feast 0.28.0 which means you can render a Feast UI by simply running.
 ```
 feast ui
 ```
+
+You'll notice that the feature views are nicely documented. 👍
+
+## Requirements
+
+This demo assumes you have Pyenv (2.3.10) and Poetry (1.4.1) installed on your machine as well as Python 3.8.
+
+Note, I did this with 3.8.12
+

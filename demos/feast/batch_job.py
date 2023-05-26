@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 def main():
-    print('simulating running a dbt batch job against sqlite3')
+    print('simulating running a batch job against sqlite3')
     td = datetime.utcnow() - timedelta(days=1)
     payload = {
         "created": td,
@@ -17,7 +17,7 @@ def main():
     df["yesterdays_acc_rate_lt_01"] = (df['acc_rate'] < 0.01).astype(int)
     df["yesterdays_conv_rate_gt_80"] = (df['conv_rate'] > 0.8).astype(int)
 
-    export_file = "./data/driver_stats_yesterday.parquet"
+    export_file = "./feature_repo/data/driver_stats_yesterday.parquet"
     df.to_parquet(export_file, allow_truncated_timestamps=True)
     print(f"exporting data to {export_file}")
 

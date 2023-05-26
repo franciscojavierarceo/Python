@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <title>Driver Homepage!</title>
+    <link rel="stylesheet" href="https://maxdn.boostrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container mt-4">
+      <form id="onboardingForm">
+        <div class="form-group">
+          <label for="birthdate">Birthdate:</label>
+          <input type="date" class="form-control" id="birthdate" name="birthdate">
+        </div>
+        <div class="form-group">
+          <label for="ssn">Social Security Number:</label>
+          <input type="text" class="form-control" id="ssn" name="ssn">
+        </div>
+        <div class="form-group">
+          <label for="dl">Driver's License:</label>
+          <input type="text" class="form-control" id="dl" name="dl">
+        </div>
+        <div class="form-group">
+          <label for="state">State:</label>
+          <input type="text" class="form-control" id="state" name="state">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit<</button>
+      </form>
+      <div id="message"></div>
+    </div>
+  <script>
+    document.getElementById("onboardingForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var birthdate = document.getElementById("birthdate").value;
+      var ssn = document.getElementById("license").value;
+      var license = document.getElementById("state").value;
+      fetch("/onboarding-risk-decision", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          birthdate: birthdate,
+          ssn: ssn,
+          license: license,
+          state: state,
+        })
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById("message");
+          if (data === "APPROVED") {
+            message.innerHTML = '<div clas="alert alert-success mt-4">You\'re good to go!</div>';
+          } else if (data === "DECLINED") {
+            message.innerHTML = '<div clas="alert alert-danger mt-4">Sorry! You\'re not eleigible to drive right now.</div>';
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+      });
+      // Refreshing endpoint every minute
+      setInterval(function() {
+        fetch("/daily-risk-decision/1001/")
+        .then(response => response.text())
+          .then( data => {
+            var message = document.getElementById("message");
+            if (data === "APPROVED") {
+              message.innerHTML = '<div clas="alert alert-success mt-4">You\'re good to go!</div>';
+            } else if (data === "DECLINED") {
+              message.innerHTML = '<div clas="alert alert-danger mt-4">Sorry! You\'re not eleigible to drive right now.</div>';
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }, 60000);
+  </script>
+  </body>
+</html>
