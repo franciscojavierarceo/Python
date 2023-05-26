@@ -1,6 +1,6 @@
-from feast import FeatureStore
+import random
 import pandas as pd
-import sqlite3
+from feast import FeatureStore
 from ml import (
     calculate_onboarding_score,
     calculate_daily_score,
@@ -37,17 +37,17 @@ def get_onboarding_features(state: str, ssn: str, dl: str, dob: str):
     dob_clean = datetime.strptime(dob, '%m-%d-%Y')
     df = pd.DataFrame(pd.to_datetime([dob_clean.date()]),
                       columns=['date_of_birth'])
-    df['driver_id'] = 1
-    df['state'] = 'NJ'
-    df['ssn'] = '123-45-6789'
-    df['dl'] = 'asdfpoijpasdf'
+    df['driver_id'] = random.randint(1005, 1020)
+    df['state'] = state
+    df['ssn'] = ssn
+    df['dl'] = dl
 
     feature_vector = store.get_online_features(
         features=[
             "transformed_onboarding:is_gt_18_years_old",
             "transformed_onboarding:is_valid_state",
-            "transformed_onboarding:is_previously_seen_ssn",
-            "transformed_onboarding:is_previously_seen_dl",
+            "ondemand_ssn_lookup:is_previously_seen_ssn",
+            "ondemand_dl_lookup:is_previously_seen_dl",
         ],
         entity_rows=[df.loc[0].to_dict()],
     ).to_dict()
@@ -56,7 +56,7 @@ def get_onboarding_features(state: str, ssn: str, dl: str, dob: str):
 def get_onboarding_score(state, ssn, dl, dob):
     features = get_onboarding_features(state, ssn, dl, dob)
     score = calculate_onboarding_score(features)
-    print(f'the calculated onboarding risk score is {score} with features = {features}')
+    print(f'\nthe calculated onboarding risk score is {score} with features = {features}\n')
     return score
 
 def get_daily_features(driver_id: int):
@@ -78,5 +78,5 @@ def get_daily_features(driver_id: int):
 def get_daily_score(driver_id: int):
     features = get_daily_features(driver_id)
     score = calculate_daily_score(features)
-    print(f'the calculated daily risk score is {score} with features = {features}')
+    print(f'\nthe calculated daily risk score is {score} with features = {features}\n')
     return score

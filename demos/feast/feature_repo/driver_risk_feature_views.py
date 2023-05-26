@@ -29,12 +29,53 @@ driver_yesterdays_stats = FileSource(
     created_timestamp_column="created",
 )
 
+driver_entities = FileSource(
+    path=os.path.abspath("data/driver_entity_table.parquet"),
+    timestamp_field="event_timestamp",
+    created_timestamp_column="created",
+)
 # Define an entity for the driver. You can think of entity as a primary key used to
 # fetch features.
 driver = Entity(
     name="driver",
     join_keys=["driver_id"],
     #value_type=ValueType.INT64,
+)
+
+ssn = Entity(
+    name="ssn",
+    join_keys=["ssn"],
+)
+
+drivers_license = Entity(
+    name="dl",
+    join_keys=["dl"],
+)
+
+driver_ssn_entities_view = FeatureView(
+    name="driver_ssn_entities",
+    entities=[ssn],
+    ttl=timedelta(days=365*10),
+    schema=[
+        Field(name="driver_id", dtype=Int64),
+        Field(name="dl", dtype=String),
+    ],
+    online=True,
+    source=driver_entities,
+    tags={},
+)
+
+driver_dl_entities_view = FeatureView(
+    name="driver_dl_entities",
+    entities=[drivers_license],
+    ttl=timedelta(days=365*10),
+    schema=[
+        Field(name="driver_id", dtype=Int64),
+        Field(name="ssn", dtype=String),
+    ],
+    online=True,
+    source=driver_entities,
+    tags={},
 )
 
 # Our parquet files contain sample data that includes a driver_id column, timestamps and
@@ -76,14 +117,14 @@ input_request = RequestSource(
     schema=[
         Field(name="date_of_birth", dtype=Int64),
         Field(name="state", dtype=String),
-        Field(name="ssn", dtype=String),
-        Field(name="dl", dtype=String),
     ],
 )
 
 def calculate_age(born):
     today = datetime.utcnow().date()
     return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+
 
 @on_demand_feature_view(  # noqa
     sources=[
@@ -93,17 +134,40 @@ def calculate_age(born):
     schema=[
         Field(name="is_gt_18_years_old", dtype=Int64),
         Field(name="is_valid_state", dtype=Int64),
-        Field(name="is_previously_seen_ssn", dtype=Int64),
-        Field(name="is_previously_seen_dl", dtype=Int64),
     ],
 )
 def transformed_onboarding(inputs: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame()
-    df["is_valid_state"] = inputs['state'].str.contains('SD').astype(int)
+    df["is_valid_state"] = inputs['state'].str.lower().str.contains('sd').astype(int)
     df["is_gt_18_years_old"] = pd.to_datetime(
-        inputs["date_of_birth"], utc=True
+        inputs["date_of_birth"], utc=True,
     ).apply(lambda x: calculate_age(x) >= 18).astype(int)
-
-    df["is_previously_seen_ssn"] = (inputs['ssn'].isnull() == False).astype(int)
-    df["is_previously_seen_dl"] = (inputs['dl'].isnull() == False).astype(int)
     return df
+
+@on_demand_feature_view(  # noqa
+    sources=[
+        driver_ssn_entities_view,
+    ],
+    schema=[
+        Field(name="is_previously_seen_ssn", dtype=Int64),
+    ],
+)
+def ondemand_ssn_lookup(inputs: pd.DataFrame) -> pd.DataFrame:
+    df = pd.DataFrame()
+    df["is_previously_seen_ssn"] = (inputs['dl'].isnull() == False).astype(int)
+    return df
+
+
+@on_demand_feature_view(  # noqa
+    sources=[
+        driver_dl_entities_view,
+    ],
+    schema=[
+        Field(name="is_previously_seen_dl", dtype=Int64),
+    ],
+)
+def ondemand_dl_lookup(inputs: pd.DataFrame) -> pd.DataFrame:
+    df = pd.DataFrame()
+    df["is_previously_seen_dl"] = (inputs['ssn'].isnull() == False).astype(int)
+    return df
+
