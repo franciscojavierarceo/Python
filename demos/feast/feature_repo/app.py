@@ -21,7 +21,7 @@ swagger = Swagger(app)
 def home_page():
     return render_template("index.html")
 
-@app.route("/onboarding-risk-features/")
+@app.route("/onboarding-risk-features/", methods=["POST"])
 def onboarding():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
@@ -82,11 +82,11 @@ def onboarding():
                   type: number
     """
     r = request.args
-    feature_vector = get_onboarding_features(r.get("state"), r.get("ssn"), r.get("dl"))
+    feature_vector = get_onboarding_features(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
     return jsonify(feature_vector)
 
 
-@app.route("/onboarding-risk-score/")
+@app.route("/onboarding-risk-score/", methods=["POST"])
 def score_onboarding_risk():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
@@ -128,7 +128,7 @@ def score_onboarding_risk():
     score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
     return jsonify(score)
 
-@app.route("/onboarding-risk-decision/")
+@app.route("/onboarding-risk-decision/", methods=["POST"])
 def decide_onboarding_risk():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
@@ -167,6 +167,7 @@ def decide_onboarding_risk():
               type: string
     """
     r = request.args
+    print(r)
     score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
     return jsonify(make_risk_decision(score))
 
