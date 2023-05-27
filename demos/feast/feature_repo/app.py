@@ -17,9 +17,13 @@ from ml import make_risk_decision
 app = Flask(__name__)
 swagger = Swagger(app)
 
+@app.route("/")
+def onboarding_page():
+    return render_template("index.html")
+
 @app.route("/home")
 def home_page():
-    return render_template("index.html")
+    return render_template("home.html")
 
 @app.route("/onboarding-risk-features/", methods=["POST"])
 def onboarding():
