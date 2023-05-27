@@ -64,6 +64,9 @@
               if (data.toUpperCase().trim() === '"APPROVED"') {
                   console.log('approved');
                   message.innerHTML = '<div class="alert alert-success mt-4">You\'re good to go!</div>';
+                  window.setTimeout(function(){
+                      window.location.href = '/home';
+                  }, 5000);
               } else if (data.toUpperCase().trim() === '"DECLINE"') {
                   console.log('declined');
                   message.innerHTML = '<div class="alert alert-danger mt-4">Sorry! You\'re not eligible to drive right now.</div>';
@@ -73,24 +76,6 @@
               console.error("Error:", error);
           });
       });
-      // Refreshing endpoint every minute
-      setInterval(function() {
-          fetch("/daily-risk-decision/1001/")
-          .then(response => response.text())
-          .then(data => {
-              var message = document.getElementById("message");
-              if (data.toUpperCase().trim() === '"APPROVE"') {
-                  console.log('approved');
-                  message.innerHTML = '<div class="alert alert-success mt-4">You\'re good to go!</div>';
-              } else if (data.toUpperCase().trim() === '"DECLINE"') {
-                  console.log('declined');
-                  message.innerHTML = '<div class="alert alert-danger mt-4">Sorry! You\'re not eligible to drive right now.</div>';
-              }
-          })
-          .catch((error) => {
-              console.error("Error:", error);
-          });
-      }, 60000);
   </script>
   </body>
 </html>

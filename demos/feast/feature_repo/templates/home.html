@@ -6,15 +6,15 @@
   <body>
     <div class="container mx-auto col-xl-4 px-4 py-5">
       <h1>Welcome, Feast Driver</h1>
+      <p>This is your home page!</p>
       <div id="message"></div>
     </div>
     <script>
     window.onload = () => {
-          fetch("/daily-risk-decision/1001/")
+          fetch("/daily-risk-decision/1002/")
           .then(response => response.text())
           .then(data => {
               var message = document.getElementById("message");
-              console.log(data);
               if (data.toUpperCase().trim() === '"APPROVED"') {
                   console.log('approved');
                   message.innerHTML = '<div class="alert alert-success mt-4">You\'re good to go!</div>';
