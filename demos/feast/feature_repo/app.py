@@ -26,7 +26,7 @@ def home_page():
     return render_template("home.html")
 
 @app.route("/onboarding-risk-features/", methods=["POST"])
-def onboarding():
+def onboarding_features():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
@@ -91,7 +91,7 @@ def onboarding():
 
 
 @app.route("/onboarding-risk-score/", methods=["POST"])
-def score_onboarding_risk():
+def onboarding_risk_score():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
@@ -133,7 +133,7 @@ def score_onboarding_risk():
     return jsonify(score)
 
 @app.route("/onboarding-risk-decision/", methods=["POST"])
-def decide_onboarding_risk():
+def onboarding_risk_decision():
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
@@ -253,7 +253,7 @@ def driver_daily_features(driver_id: int):
 
 
 @app.route("/daily-risk-score/<driver_id>/")
-def driver_daily_risk(driver_id: int):
+def driver_daily_risk_score(driver_id: int):
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
@@ -284,7 +284,7 @@ def driver_daily_risk(driver_id: int):
     return jsonify(score)
 
 @app.route("/daily-risk-decision/<driver_id>/")
-def driver_daily_decision(driver_id: int):
+def driver_daily_risk_decision(driver_id: int):
     """Example endpoint returning features by id
     This is using docstrings for specifications.
     ---
