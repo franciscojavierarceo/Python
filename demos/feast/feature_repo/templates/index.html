@@ -61,18 +61,19 @@
                   state: state,
               }
           })
-          .then(response => response.text())
+          .then(response => response.json())
           .then(data => {
               console.log(data);
+              var decision = data.decision;
               var message = document.getElementById("message");
               setTimeout(function() {
                 //document.getElementById("onboardingForm").style.display = 'none';
-                if (data.toUpperCase().trim() === '"APPROVED"') {
+                if (decision.toUpperCase() === 'APPROVED') {
                     message.innerHTML = '<div class="alert alert-success mt-4">You\'re good to go!</div>';
                     window.setTimeout(function(){
                         window.location.href = '/home';
                     }, 5000);
-                } else if (data.toUpperCase().trim() === '"DECLINE"') {
+                } else if (decision.toUpperCase() === 'DECLINE') {
                     message.innerHTML = '<div class="alert alert-danger mt-4">Sorry! You\'re not eligible to drive right now.</div>';
                 }
                 document.getElementById("spinner").style.display = 'none';

@@ -173,7 +173,7 @@ def onboarding_risk_decision():
     r = request.args
     print(r)
     score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
-    return jsonify(make_risk_decision(score))
+    return jsonify({"decision": make_risk_decision(score)})
 
 @app.route("/daily-risk-features/<driver_id>/")
 def driver_daily_features(driver_id: int):
@@ -312,7 +312,7 @@ def driver_daily_risk_decision(driver_id: int):
               type: string
     """
     score = get_daily_score(driver_id)
-    return jsonify(make_risk_decision(score))
+    return jsonify({"decision": make_risk_decision(score)})
 
 if __name__ == "__main__":
     app.run(debug=True)

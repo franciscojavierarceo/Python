@@ -12,14 +12,13 @@
     <script>
     window.onload = () => {
           fetch("/daily-risk-decision/1002/")
-          .then(response => response.text())
+          .then(response => response.json())
           .then(data => {
+              var decision = data.decision;
               var message = document.getElementById("message");
-              if (data.toUpperCase().trim() === '"APPROVED"') {
-                  console.log('approved');
+              if (decision.toUpperCase() === 'APPROVED') {
                   message.innerHTML = '<div class="alert alert-success mt-4">You\'re good to go!</div>';
-              } else if (data.toUpperCase().trim() === '"DECLINE"') {
-                  console.log('declined');
+              } else if (decision.toUpperCase() === 'DECLINE') {
                   message.innerHTML = '<div class="alert alert-danger mt-4">Sorry! You\'re not eligible to drive right now.</div>';
               }
           })
@@ -29,14 +28,16 @@
     };
       // Refreshing endpoint every minute
       setInterval(function() {
+          console.log('refreshing score every 10 seconds...');
           fetch("/daily-risk-decision/1001/")
-          .then(response => response.text())
+          .then(response => response.json())
           .then(data => {
+              var decision = data.decision;
               var message = document.getElementById("message");
-              if (data.toUpperCase().trim() === '"APPROVED"') {
+              if (decision.toUpperCase() === 'APPROVED') {
                   console.log('approved');
                   message.innerHTML = '<div class="alert alert-success mt-4">You\'re good to go!</div>';
-              } else if (data.toUpperCase().trim() === '"DECLINE"') {
+              } else if (decision.toUpperCase() === 'DECLINE') {
                   console.log('declined');
                   message.innerHTML = '<div class="alert alert-danger mt-4">Sorry! You\'re not eligible to drive right now.</div>';
               }
@@ -44,7 +45,7 @@
           .catch((error) => {
               console.error("Error:", error);
           });
-      }, 60000);
+      }, 10000);
   </script>
   </body>
 </html>
