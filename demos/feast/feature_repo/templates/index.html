@@ -71,7 +71,7 @@
               setTimeout(function() {
                 //document.getElementById("onboardingForm").style.display = 'none';
                 if (decision.toUpperCase() === 'APPROVED') {
-                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>' + '<p>You\'ll be taken to your home page in a second!</p>';
+                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>' + '<p>You\'ll be taken to your homepage in a second!</p>';
                     window.setTimeout(function(){
                         window.location.href = '/home';
                     }, 5000);
