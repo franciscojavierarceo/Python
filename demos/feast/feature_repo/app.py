@@ -169,6 +169,8 @@ def onboarding_risk_decision():
           properties:
             decision:
               type: string
+            score:
+              type: number
     """
     r = request.args
     print(r)
@@ -310,6 +312,8 @@ def driver_daily_risk_decision(driver_id: int):
           properties:
             decision:
               type: string
+            score:
+              type: number
     """
     score = get_daily_score(driver_id)
     return jsonify({"decision": make_risk_decision(score), "score": score})
