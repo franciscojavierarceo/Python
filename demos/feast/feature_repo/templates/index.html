@@ -71,12 +71,12 @@
               setTimeout(function() {
                 //document.getElementById("onboardingForm").style.display = 'none';
                 if (decision.toUpperCase() === 'APPROVED') {
-                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>';
+                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>' + '<p>You\'ll be taken to your home page in a second!</p>';
                     window.setTimeout(function(){
                         window.location.href = '/home';
                     }, 5000);
                 } else if (decision.toUpperCase() === 'DECLINE') {
-                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score from the ' + model + '</strong> model is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>';
+                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>' + '<button class="btn btn-primary" onClick="window.location.reload();">Try Again</button>';
                 }
                 document.getElementById("spinner").style.display = 'none';
               }, 1500);
