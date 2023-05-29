@@ -171,11 +171,13 @@ def onboarding_risk_decision():
               type: string
             score:
               type: number
+            model:
+              type: string
     """
     r = request.args
     print(r)
     score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
-    return jsonify({"decision": make_risk_decision(score), "score": score})
+    return jsonify({"decision": make_risk_decision(score), "score": score, "model": "onboarding"})
 
 @app.route("/daily-risk-features/<driver_id>/")
 def driver_daily_features(driver_id: int):
@@ -314,9 +316,11 @@ def driver_daily_risk_decision(driver_id: int):
               type: string
             score:
               type: number
+            model:
+              type: string
     """
     score = get_daily_score(driver_id)
-    return jsonify({"decision": make_risk_decision(score), "score": score})
+    return jsonify({"decision": make_risk_decision(score), "score": score, "model": "daily"})
 
 if __name__ == "__main__":
     app.run(debug=True)

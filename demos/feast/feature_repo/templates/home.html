@@ -14,10 +14,11 @@
           .then(response => response.json())
           .then(data => {
               var decision = data.decision;
+              var model = data.model;
               var score = Math.round(data.score * 100);
               var message = document.getElementById("message");
               if (decision.toUpperCase() === 'APPROVED') {
-                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score is ' + score + '.<br><br>You\'re good to go!</div>';
+                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>';
               } else if (decision.toUpperCase() === 'DECLINE') {
                   message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>';
               }
@@ -29,18 +30,19 @@
       // Refreshing endpoint every minute
       setInterval(function() {
           console.log('refreshing score every 5 seconds...');
-          fetch("/daily-risk-decision/1001/")
+          fetch("/daily-risk-decision/1002/")
           .then(response => response.json())
           .then(data => {
-              var score = Math.round(data.score * 100);
               var decision = data.decision;
+              var model = data.model;
+              var score = Math.round(data.score * 100);
               var message = document.getElementById("message");
               if (decision.toUpperCase() === 'APPROVED') {
-                  console.log('approved');
-                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score is ' + score + '.<br><br>You\'re good to go!</div>';
+                  console.log('approved with score ' + score);
+                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>';
               } else if (decision.toUpperCase() === 'DECLINE') {
-                  console.log('declined');
-                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>';
+                  console.log('declined with score ' + score);
+                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score from the ' + model + '</strong> model is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>';
               }
           })
           .catch((error) => {
