@@ -18,9 +18,10 @@
               var score = Math.round(data.score * 100);
               var message = document.getElementById("message");
               if (decision.toUpperCase() === 'APPROVED') {
-                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>';
+                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go! Updating score in <a id="refresh_timer">5</a> seconds.</div>';
+                  var now = new Date().getTime();
               } else if (decision.toUpperCase() === 'DECLINE') {
-                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>';
+                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now. Updating score in <a id="refresh_timer">5</a> seconds.</div>';
               }
           })
           .catch((error) => {
@@ -39,16 +40,29 @@
               var message = document.getElementById("message");
               if (decision.toUpperCase() === 'APPROVED') {
                   console.log('approved with score ' + score);
-                  message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go!</div>';
+                message.innerHTML = '<div class="alert alert-success mt-4">' + 'You\'re risk score from the <strong>' + model + '</strong> model is ' + score + '.<br><br>You\'re good to go! Updating score in <a id="refresh_timer">5</a> seconds.</div>';
+
               } else if (decision.toUpperCase() === 'DECLINE') {
                   console.log('declined with score ' + score);
-                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score from the ' + model + '</strong> model is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.</div>';
+                  message.innerHTML = '<div class="alert alert-danger mt-4">' + 'You\'re risk score from the ' + model + '</strong> model is ' + score + '.<br><br>Sorry! You\'re not eligible to drive right now.<br>Updating score in <a id="refresh_timer">5</a> seconds.</div>';
               }
           })
           .catch((error) => {
               console.error("Error:", error);
           });
       }, 5000);
+    
+    var timeleft = 4;
+    downloadTimer = setInterval(function(){
+      if(timeleft <= 0){
+        // clearInterval(downloadTimer);
+        document.getElementById("refresh_timer").innerHTML = 5 ;
+        timeleft = 5;
+      } else {
+        document.getElementById("refresh_timer").innerHTML = timeleft;
+      }
+      timeleft -= 1;
+    }, 1000);
   </script>
   </body>
 </html>
