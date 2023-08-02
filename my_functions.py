@@ -99,6 +99,7 @@ def gini(actual: pd.Series, pred: pd.Series, weight: int = None):
     return Gini
 
 
+
 def mylift(
     actual,
     pred,
@@ -106,6 +107,8 @@ def mylift(
     n=10,
     xlab="Predicted Decile",
     MyTitle="Model Performance Lift Chart",
+    dualaxis=False,
+    output=False,
 ):
     pdf = pd.DataFrame(scipy.vstack([actual, pred]).T, columns=["Actual", "Predicted"])
     pdf = pdf.sort_values("Predicted")
@@ -126,7 +129,6 @@ def mylift(
     )
     pdf["PredictedDecile"][pdf["PredictedDecile"] < 1.0] = 1.0
     pdf["PredictedDecile"][pdf["PredictedDecile"] > n] = n
-
     pdf["WeightedPrediction"] = pdf["Predicted"] * pdf["Weight"]
     pdf["WeightedActual"] = pdf["Actual"] * pdf["Weight"]
     lift_df = pdf.groupby("PredictedDecile").agg(
@@ -148,6 +150,24 @@ def mylift(
     d = pd.DataFrame(lift_df.index)
     p = lift_df["AveragePrediction"]
     a = lift_df["AverageActual"]
+    if dualaxis:
+        fig, ax1 = plt.subplots(figsize=(12,8))
+        ax2 = ax1.twinx()
+        ax1.plot(d, p, label="Predicted", color="blue", marker="o")
+        ax2.plot(d, a, label="Actual", color="red", marker="d")
+        ax1.legend(["Predicted", "Actual"])
+        ax1.title.set_text(MyTitle + "\n" + GiniTitle)
+        ax1.set_xlabel(xlab)
+        ax1.set_ylabel("Actual vs. Predicted")
+        if isinstance(pred, pd.core.series.Series):
+            ax2.set_ylabel(pred.name)
+        ax1.grid()
+        fig.show()
+        if output:
+            return lift_df
+        else:
+            return
+    
     plt.plot(d, p, label="Predicted", color="blue", marker="o")
     plt.plot(d, a, label="Actual", color="red", marker="d")
     plt.legend(["Predicted", "Actual"])
@@ -156,8 +176,9 @@ def mylift(
     plt.ylabel("Actual vs. Predicted")
     plt.grid()
     plt.show()
-
-    return lift_df
+    
+    if output:
+        return lift_df
 
 
 def roc_plot(actual, pred, ttl):
