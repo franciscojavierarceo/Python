@@ -4,10 +4,11 @@ import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+from typing import Tuple
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import roc_curve, auc, roc_auc_score
-
 
 def json_parser(d: dict, path: str, delimiter: str = "."):
     """
@@ -66,6 +67,68 @@ def json_parser(d: dict, path: str, delimiter: str = "."):
 def pp(x):
     print(json.dumps(json.loads(x) if type(x) in (str, bytes) else x, indent=2))
 
+def den_cdf_plot_by_x(
+    xdf: pd.DataFrame,
+    groupbyvar: str,
+    xvar: str,
+    wvar: str,
+    k: int=None,
+    bbox: Tuple=(0.5, -0.1),
+    legend_ncol: int=3,
+    max_percentile: float=1.,
+):
+    fig, (ax1, ax) = plt.subplots(1, 2, figsize=(16, 8))
+    if k is not None:
+        sdf = xdf[groupbyvar].value_counts()
+        top_k = sdf[0:(k-1)].index.tolist()
+        xdfss = xdf[xdf.eval(f'{groupbyvar} == "' + f'" | {groupbyvar} == "'.join(top_k) + '"')].reset_index(drop=True)
+        print(f'reducing records from {xdf.shape[0]} to {xdfss.shape[0]}')
+        print(f"reducing groups from {xdf[groupbyvar].nunique()} to {k}")
+    else:
+        xdfss = xdf
+    
+    groups = xdfss[groupbyvar].unique()
+    max_percentile_value = xdfss[xvar].quantile(max_percentile)
+    xdfss = xdfss[xdfss[xvar] < max_percentile_value]
+    pal = sns.color_palette("bright", len(groups))
+
+    sns.kdeplot(
+        data=xdfss,
+        weights=wvar, 
+        x=xvar, 
+        hue=groupbyvar, 
+        cut=0, fill=True, 
+        common_norm=False, 
+        alpha=0.2, 
+        ax=ax1,
+        palette=pal,
+    ).set(title=f'Estimated Density Function of Total Income by {groupbyvar}')
+    label = ddi_codebook.get_variable_info(xvar.replace("_2", "")).label.title().replace("'S", "'s")
+    ax1.set_xlabel(f"{label}")
+    ax1.set_ylabel(f"Percent of ASEC Data")
+    ax1.get_yaxis().set_major_formatter(mpl.ticker.StrMethodFormatter('{x:,.2f}'))
+    ax1.get_xaxis().set_major_formatter(mpl.ticker.StrMethodFormatter('${x:,.0f}'))
+    ax1.get_legend().set_visible(False)
+
+    sns.ecdfplot(
+        data=xdfss,
+        weights=wvar, 
+        x=xvar, 
+        hue=groupbyvar, 
+        alpha=0.8, 
+        ax=ax,
+        palette=pal,
+    ).set(title=f'Cumulative Distribution of Total Income by {groupbyvar}')
+    label = ddi_codebook.get_variable_info(xvar.replace("_2", "")).label.title().replace("'S", "'s")
+    ax.set_xlabel(f"{label}")
+    ax.set_ylabel(f"Cumulative Percent of ASEC Data")
+    ax.get_yaxis().set_major_formatter(mpl.ticker.StrMethodFormatter('{x:,.2f}'))
+    ax.get_xaxis().set_major_formatter(mpl.ticker.StrMethodFormatter('${x:,.0f}'))
+    ax.get_legend().set_visible(False)
+
+    fig.legend(labels=groups, loc='lower center', bbox_to_anchor=bbox, ncol=legend_ncol)
+#     fig.legend(labels=groups, loc='outside lower center', ncol=3)
+    fig.show()
 
 def cdfplotdata(xdf: pd.DataFrame, xcol: str):
     """
