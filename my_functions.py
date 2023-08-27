@@ -163,12 +163,12 @@ def gini(actual: pd.Series, pred: pd.Series, weight: int = None):
 
 
 def mylift(
-    actual,
-    pred,
-    weight=None,
-    n=10,
-    xlab="Predicted Decile",
-    MyTitle="Model Performance Lift Chart",
+    actual: pd.Series,
+    pred: pd.Series,
+    weight: pd.Series=None,
+    n: int=10,
+    xlab: str="Predicted Decile",
+    MyTitle: str="Model Performance Lift Chart",
 ):
     pdf = pd.DataFrame(scipy.vstack([actual, pred]).T, columns=["Actual", "Predicted"])
     pdf = pdf.sort_values("Predicted")
