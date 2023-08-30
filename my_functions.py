@@ -271,8 +271,8 @@ def cdfplot(xvar):
 
 
 def pt(df: pd.DataFrame, xvar: str, sortfreq: bool = True, ascending: bool = False):
-    df = pd.concat([df[xvar].value_counts(), df[xvar].value_counts(True)], axis=1)
-    df.columns = ["Count", "Percent"]
+    df = pd.concat([df[xvar].value_counts(), df[xvar].value_counts(True)], axis=1).reset_index()
+    df.columns = [xvar, "Count", "Percent"]
     df.sort_values(by="Count" if sortfreq else xvar, ascending=ascending, inplace=True)
     df["Cumulative Percent"] = df["Percent"].cumsum()
     return df
