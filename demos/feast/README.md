@@ -108,6 +108,13 @@ Press CTRL+C to quit
 
 Then navigate to http://127.0.0.1:5000/apidocs/ and you can see the endpoints.
 
+![feast_flasgger](https://github.com/franciscojavierarceo/Python/assets/4163062/04f351ef-a982-4565-9967-f35418fceb54)
+
+As shown in the video above, if you navigate to the main page http://127.0.0.1:5000 you can submit a form that will 
+return a decision about whether or not you are approved to drive; below is an example.
+
+![high_risk](https://github.com/franciscojavierarceo/Python/assets/4163062/f2238891-30aa-4a88-8147-3fc887966221)
+
 ## Data Details 
 This example uses Feast's pre-generated mock data for driver metrics.
 
