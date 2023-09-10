@@ -1,5 +1,6 @@
 import sys
 
+
 def hello_world() -> None:
     print("hello world")
     print("we are using python version {}".format(sys.version))

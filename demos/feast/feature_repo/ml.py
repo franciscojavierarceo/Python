@@ -1,7 +1,9 @@
 import math
 
+
 def cap_score(score: float):
-     return min(score, 1) if score > 0 else max(score, 0)
+    return min(score, 1) if score > 0 else max(score, 0)
+
 
 def calculate_onboarding_score(features) -> float:
     # intercept
@@ -16,6 +18,7 @@ def calculate_onboarding_score(features) -> float:
         score += coef[f] * features[f][0]
 
     return cap_score(score)
+
 
 def calculate_daily_score(features) -> float:
     # intercept
@@ -33,6 +36,6 @@ def calculate_daily_score(features) -> float:
 
     return cap_score(score)
 
-def make_risk_decision(score, thresh=0.5) -> str:
-    return 'Approved' if score < thresh else 'Decline'
 
+def make_risk_decision(score, thresh=0.5) -> str:
+    return "Approved" if score < thresh else "Decline"

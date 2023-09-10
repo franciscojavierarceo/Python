@@ -17,13 +17,16 @@ from ml import make_risk_decision
 app = Flask(__name__)
 swagger = Swagger(app)
 
+
 @app.route("/")
 def onboarding_page():
     return render_template("index.html")
 
+
 @app.route("/home")
 def home_page():
     return render_template("home.html")
+
 
 @app.route("/onboarding-risk-features/", methods=["POST"])
 def onboarding_features():
@@ -86,7 +89,9 @@ def onboarding_features():
                   type: number
     """
     r = request.args
-    feature_vector = get_onboarding_features(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
+    feature_vector = get_onboarding_features(
+        r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob")
+    )
     return jsonify(feature_vector)
 
 
@@ -129,8 +134,11 @@ def onboarding_risk_score():
               type: number
     """
     r = request.args
-    score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
+    score = get_onboarding_score(
+        r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob")
+    )
     return jsonify({"score": score})
+
 
 @app.route("/onboarding-risk-decision/", methods=["POST"])
 def onboarding_risk_decision():
@@ -176,8 +184,13 @@ def onboarding_risk_decision():
     """
     r = request.args
     print(r)
-    score = get_onboarding_score(r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob"))
-    return jsonify({"decision": make_risk_decision(score), "score": score, "model": "onboarding"})
+    score = get_onboarding_score(
+        r.get("state"), r.get("ssn"), r.get("dl"), r.get("dob")
+    )
+    return jsonify(
+        {"decision": make_risk_decision(score), "score": score, "model": "onboarding"}
+    )
+
 
 @app.route("/daily-risk-features/<driver_id>/")
 def driver_daily_features(driver_id: int):
@@ -287,6 +300,7 @@ def driver_daily_risk_score(driver_id: int):
     score = get_daily_score(driver_id)
     return jsonify({"score": score})
 
+
 @app.route("/daily-risk-decision/<driver_id>/")
 def driver_daily_risk_decision(driver_id: int):
     """Example endpoint returning features by id
@@ -320,7 +334,10 @@ def driver_daily_risk_decision(driver_id: int):
               type: string
     """
     score = get_daily_score(driver_id)
-    return jsonify({"decision": make_risk_decision(score), "score": score, "model": "daily"})
+    return jsonify(
+        {"decision": make_risk_decision(score), "score": score, "model": "daily"}
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True)

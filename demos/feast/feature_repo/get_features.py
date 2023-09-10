@@ -33,14 +33,14 @@ def get_demo_historical_features():
     )
     return jsonify(retrieval_job.to_df().to_dict())
 
+
 def get_onboarding_features(state: str, ssn: str, dl: str, dob: str):
-    dob_clean = datetime.strptime(dob, '%m-%d-%Y')
-    df = pd.DataFrame(pd.to_datetime([dob_clean.date()]),
-                      columns=['date_of_birth'])
-    df['driver_id'] = random.randint(1005, 1020)
-    df['state'] = state
-    df['ssn'] = ssn
-    df['dl'] = dl
+    dob_clean = datetime.strptime(dob, "%m-%d-%Y")
+    df = pd.DataFrame(pd.to_datetime([dob_clean.date()]), columns=["date_of_birth"])
+    df["driver_id"] = random.randint(1005, 1020)
+    df["state"] = state
+    df["ssn"] = ssn
+    df["dl"] = dl
 
     feature_vector = store.get_online_features(
         features=[
@@ -53,11 +53,15 @@ def get_onboarding_features(state: str, ssn: str, dl: str, dob: str):
     ).to_dict()
     return feature_vector
 
+
 def get_onboarding_score(state, ssn, dl, dob):
     features = get_onboarding_features(state, ssn, dl, dob)
     score = calculate_onboarding_score(features)
-    print(f'\nthe calculated onboarding risk score is {score} with features = {features}\n')
+    print(
+        f"\nthe calculated onboarding risk score is {score} with features = {features}\n"
+    )
     return score
+
 
 def get_daily_features(driver_id: int):
     rows = [{"driver_id": driver_id}]
@@ -75,8 +79,9 @@ def get_daily_features(driver_id: int):
 
     return feature_vector
 
+
 def get_daily_score(driver_id: int):
     features = get_daily_features(driver_id)
     score = calculate_daily_score(features)
-    print(f'\nthe calculated daily risk score is {score} with features = {features}\n')
+    print(f"\nthe calculated daily risk score is {score} with features = {features}\n")
     return score

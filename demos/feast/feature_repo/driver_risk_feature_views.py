@@ -39,7 +39,7 @@ driver_entities = FileSource(
 driver = Entity(
     name="driver",
     join_keys=["driver_id"],
-    #value_type=ValueType.INT64,
+    # value_type=ValueType.INT64,
 )
 
 ssn = Entity(
@@ -55,7 +55,7 @@ drivers_license = Entity(
 driver_ssn_entities_view = FeatureView(
     name="driver_ssn_entities",
     entities=[ssn],
-    ttl=timedelta(days=365*10),
+    ttl=timedelta(days=365 * 10),
     schema=[
         Field(name="driver_id", dtype=Int64),
         Field(name="dl", dtype=String),
@@ -68,7 +68,7 @@ driver_ssn_entities_view = FeatureView(
 driver_dl_entities_view = FeatureView(
     name="driver_dl_entities",
     entities=[drivers_license],
-    ttl=timedelta(days=365*10),
+    ttl=timedelta(days=365 * 10),
     schema=[
         Field(name="driver_id", dtype=Int64),
         Field(name="ssn", dtype=String),
@@ -84,7 +84,7 @@ driver_dl_entities_view = FeatureView(
 driver_hourly_stats_view = FeatureView(
     name="driver_hourly_stats",
     entities=[driver],
-    ttl=timedelta(days=365*10),
+    ttl=timedelta(days=365 * 10),
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),
@@ -120,10 +120,10 @@ input_request = RequestSource(
     ],
 )
 
+
 def calculate_age(born):
     today = datetime.utcnow().date()
     return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-
 
 
 @on_demand_feature_view(  # noqa
@@ -138,11 +138,17 @@ def calculate_age(born):
 )
 def transformed_onboarding(inputs: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame()
-    df["is_valid_state"] = inputs['state'].str.lower().str.contains('sd').astype(int)
-    df["is_gt_18_years_old"] = pd.to_datetime(
-        inputs["date_of_birth"], utc=True,
-    ).apply(lambda x: calculate_age(x) >= 18).astype(int)
+    df["is_valid_state"] = inputs["state"].str.lower().str.contains("sd").astype(int)
+    df["is_gt_18_years_old"] = (
+        pd.to_datetime(
+            inputs["date_of_birth"],
+            utc=True,
+        )
+        .apply(lambda x: calculate_age(x) >= 18)
+        .astype(int)
+    )
     return df
+
 
 @on_demand_feature_view(  # noqa
     sources=[
@@ -154,7 +160,7 @@ def transformed_onboarding(inputs: pd.DataFrame) -> pd.DataFrame:
 )
 def ondemand_ssn_lookup(inputs: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame()
-    df["is_previously_seen_ssn"] = (inputs['dl'].isnull() == False).astype(int)
+    df["is_previously_seen_ssn"] = (inputs["dl"].isnull() == False).astype(int)
     return df
 
 
@@ -168,6 +174,5 @@ def ondemand_ssn_lookup(inputs: pd.DataFrame) -> pd.DataFrame:
 )
 def ondemand_dl_lookup(inputs: pd.DataFrame) -> pd.DataFrame:
     df = pd.DataFrame()
-    df["is_previously_seen_dl"] = (inputs['ssn'].isnull() == False).astype(int)
+    df["is_previously_seen_dl"] = (inputs["ssn"].isnull() == False).astype(int)
     return df
-
