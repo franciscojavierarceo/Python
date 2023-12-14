@@ -4,7 +4,7 @@ https://github.com/franciscojavierarceo/Python/assets/4163062/394f6f7b-34d1-4c4e
 
 This is a modification of [Feast's feature store demo](https://docs.feast.dev/getting-started/quickstart) 
 to create an OpenAPI wrapper that allows you to browse the endpoints, simulate a user experience, and 
-run a real-time machine learning model*.
+run a real-time machine learning model.
 
 *Note: this example uses a simple weighted sum of integers that stay between [0,1] for simplicity.
 In practice, a real machine learning model can be swamped in but that is not the focus of this demonstration.*
