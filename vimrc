@@ -7,6 +7,10 @@ set number
 " set tabs to have 4 spaces
 set ts=2
 
+set foldmethod=indent
+set foldlevel=0
+set foldclose=all
+
 " indent when moving to the next line while writing code
 set autoindent
 
