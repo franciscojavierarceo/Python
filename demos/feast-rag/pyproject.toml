@@ -2,7 +2,7 @@
 name = "feast-rag"
 version = "0.1.0"
 description = "a demo using feast to do Retrieval Augmented Generation (RAG)"
-authors = ["franciscojavierarceo <francisco.arceo@affirm.com>"]
+authors = ["franciscojavierarceo"]
 readme = "README.md"
 packages = [{include = "feast_rag"}]
 
