@@ -1,8 +1,11 @@
+import os 
 import pandas as pd
 from transformers import AutoTokenizer, AutoModel
 import torch
 import torch.nn.functional as F
 
+INPUT_FILENAME = "city_wikipedia_summaries.csv"
+EXPORT_FILENAME = "city_wikipedia_summaries_with_embeddings.csv"
 TOKENIZER = 'sentence-transformers/all-MiniLM-L6-v2'
 MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
@@ -22,14 +25,21 @@ def score_model(sentences, tokenizer, model):
     return sentence_embeddings
 
 def main():
-    df = pd.read_csv("city_wikipedia_summaries.csv")
-    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
-    model = AutoModel.from_pretrained(MODEL)
-    embeddings = score_model(df['Wiki Summary'].tolist(), tokenizer, model)
-    print(embeddings)
-    print('shape = ', df.shape)
-    df['embeddings'] = list(embeddings.detach().cpu().numpy())
-    print(df.head())
+    if EXPORT_FILENAME not in os.listdir():
+        print("scored data not found...generating embeddings...")
+        df = pd.read_csv(INPUT_FILENAME)
+        tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
+        model = AutoModel.from_pretrained(MODEL)
+        embeddings = score_model(df['Wiki Summary'].tolist(), tokenizer, model)
+        print(embeddings)
+        print('shape = ', df.shape)
+        df['Embeddings'] = list(embeddings.detach().cpu().numpy())
+        print("embeddings generated...")
+        print(df.head())
+        df.to_csv(EXPORT_FILENAME, index=False)
+        print("...data exported. job complete")
+    else:
+        print("scored data found...skipping generating embeddings.")
 
 if __name__ == '__main__':
     main()

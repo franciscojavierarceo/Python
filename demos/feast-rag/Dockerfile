@@ -32,6 +32,6 @@ ENV PYTHONHASHSEED=random \
 RUN curl -sSL https://install.python-poetry.org | python3 - --version $POETRY_VERSION
 
 COPY pyproject.toml poetry.lock /code/
-RUN poetry install --no-interaction --no-ansi 
+RUN poetry install --no-interaction --no-ansi --no-root
 
 COPY . ./code/

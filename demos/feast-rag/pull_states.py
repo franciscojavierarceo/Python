@@ -1,7 +1,9 @@
+import os
 from typing import Dict, List
 import wikipedia as wiki
 import pandas as pd
 
+EXPORT_FILENAME = "city_wikipedia_summaries.csv"
 CITIES = [
     "New York, New York",
     "Los Angeles, California",
@@ -69,11 +71,15 @@ def get_wikipedia_summary(cities: List[str]) -> Dict[str, str]:
 def write_data(output_dict: Dict[str, str]) -> None:
     df = pd.DataFrame([output_dict]).T.reset_index()
     df.columns = ['State', 'Wiki Summary']
-    df.to_csv("city_wikipedia_summaries.csv", index=False)
+    df.to_csv(EXPORT_FILENAME, index=False)
 
 def main():
-    city_dict_output = get_wikipedia_summary(CITIES)
-    write_data(city_dict_output)
+    if EXPORT_FILENAME not in os.listdir():
+        print("data not found pullling wikipedia state summaries...")
+        city_dict_output = get_wikipedia_summary(CITIES)
+        write_data(city_dict_output)
+    else:
+        print("data already present...skipping download")
 
 if __name__ == "__main__":
     main()
