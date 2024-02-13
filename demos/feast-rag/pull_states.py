@@ -73,7 +73,7 @@ def write_data(output_dict: Dict[str, str]) -> None:
     df.columns = ['State', 'Wiki Summary']
     df.to_csv(EXPORT_FILENAME, index=False)
 
-def main():
+def pull_state_data():
     if EXPORT_FILENAME not in os.listdir():
         print("data not found pullling wikipedia state summaries...")
         city_dict_output = get_wikipedia_summary(CITIES)
@@ -82,4 +82,4 @@ def main():
         print("data already present...skipping download")
 
 if __name__ == "__main__":
-    main()
+    pull_state_data()

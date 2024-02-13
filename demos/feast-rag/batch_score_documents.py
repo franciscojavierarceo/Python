@@ -14,7 +14,7 @@ def mean_pooling(model_output, attention_mask):
     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-def score_model(sentences, tokenizer, model):
+def run_model(sentences, tokenizer, model):
     encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
     # Compute token embeddings
     with torch.no_grad():
@@ -24,13 +24,13 @@ def score_model(sentences, tokenizer, model):
     sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
     return sentence_embeddings
 
-def main():
+def score_data():
     if EXPORT_FILENAME not in os.listdir():
         print("scored data not found...generating embeddings...")
         df = pd.read_csv(INPUT_FILENAME)
         tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)
         model = AutoModel.from_pretrained(MODEL)
-        embeddings = score_model(df['Wiki Summary'].tolist(), tokenizer, model)
+        embeddings = run_model(df['Wiki Summary'].tolist(), tokenizer, model)
         print(embeddings)
         print('shape = ', df.shape)
         df['Embeddings'] = list(embeddings.detach().cpu().numpy())
@@ -42,4 +42,4 @@ def main():
         print("scored data found...skipping generating embeddings.")
 
 if __name__ == '__main__':
-    main()
+    score_data()
