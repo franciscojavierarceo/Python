@@ -58,14 +58,14 @@ CITIES = [
 ]
 
 def get_wikipedia_summary(cities: List[str]) -> Dict[str, str]:
-    city_summary_dict = {}
+    city_summaries = {}
     for city in cities:
         try:
-            city_summary_dict[city] = wiki.summary(city)
+            city_summaries[city] = wiki.summary(city)
         except:
             print(f"error retrieving {city}")
 
-    return city_summary_dict
+    return city_summaries
 
 
 def write_data(output_dict: Dict[str, str]) -> None:
@@ -73,11 +73,11 @@ def write_data(output_dict: Dict[str, str]) -> None:
     df.columns = ['State', 'Wiki Summary']
     df.to_csv(EXPORT_FILENAME, index=False)
 
-def pull_state_data():
+def pull_state_data() -> None:
     if EXPORT_FILENAME not in os.listdir():
         print("data not found pullling wikipedia state summaries...")
-        city_dict_output = get_wikipedia_summary(CITIES)
-        write_data(city_dict_output)
+        city_summary_output = get_wikipedia_summary(CITIES)
+        write_data(city_summary_output)
     else:
         print("data already present...skipping download")
 

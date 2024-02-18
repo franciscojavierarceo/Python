@@ -24,7 +24,7 @@ def run_model(sentences, tokenizer, model):
     sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
     return sentence_embeddings
 
-def score_data():
+def score_data() -> None:
     if EXPORT_FILENAME not in os.listdir():
         print("scored data not found...generating embeddings...")
         df = pd.read_csv(INPUT_FILENAME)
