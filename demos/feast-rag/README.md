@@ -28,7 +28,7 @@ The overview is relatively simple, the goal is to define an architecture
 to support the following:
 
 ```mermaid
-flowchart LR;
+flowchart TD;
     A[Pull Data] --> B[Batch Score Embeddings];
     B[Batch Score Embeddings] --> C[Materialize Online];
     C[Materialize Online] --> D[Retrieval Augmented Generation];
