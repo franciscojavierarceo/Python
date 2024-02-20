@@ -24,10 +24,11 @@ python batch_score_documents.py
 
 ```mermaid
 flowchart TD;
-    A[Pull Data] --> B[Batch Score];
+    A[Pull Data] --> B[Batch Score Embeddings];
     B[Batch Score] --> C[Materialize Online];
     C[Materialize Online] --> D[Retrieval Augmented Generation];
     D[Retrieval Augmented Generation] --> E[Update Training Labels];
     E[Update Training Labels] --> F[Fine Tuning];
+    F[Fine Tuning] --> B[Batch Score Embeddings];
 ```
 
