@@ -35,6 +35,6 @@ flowchart TD;
     D[Retrieval Augmented Generation] --> E[Store User Interaction];
     E[Store User Interaction] --> F[Update Training Labels];
     F[Update Training Labels] --> H[Fine Tuning];
-    H[Fine Tuning] == Backpropagate ==> B[Batch Score Embeddings];
+    H[Fine Tuning] -. Backpropagate .-> B[Batch Score Embeddings];
 ```
 
