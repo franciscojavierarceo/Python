@@ -23,7 +23,7 @@ python batch_score_documents.py
 ```
 
 ```mermaid
-graph TD;
+flowchart TD;
     A[Pull Data] --> B[Batch Score]|;
     B[Materialize Online] --> C[Retrieval Augmented Generation];
     C[Retrieval Augmented Generation] --> D[Update Training Labels];
