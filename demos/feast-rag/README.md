@@ -29,7 +29,7 @@ flowchart TD;
     C[Materialize Online] --> D[Retrieval Augmented Generation];
     D[Retrieval Augmented Generation] --> E[Store User Interaction];
     E[Store User Interaction] --> F[Update Training Labels];
-    F[Update Training Labels] --> G[Fine Tuning];
+    F[Update Training Labels] --> H[Fine Tuning];
     H[Fine Tuning] --> B[Batch Score Embeddings];
 ```
 
