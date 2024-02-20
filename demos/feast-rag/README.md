@@ -22,10 +22,15 @@ Then run
 python batch_score_documents.py
 ```
 
+# Overview
+
+The overview is relatively simple, the goal is to define an architecture
+to support the following:
+
 ```mermaid
 flowchart TD;
     A[Pull Data] --> B[Batch Score Embeddings];
-    B[Batch Score] --> C[Materialize Online];
+    B[Batch Score Embeddings] --> C[Materialize Online];
     C[Materialize Online] --> D[Retrieval Augmented Generation];
     D[Retrieval Augmented Generation] --> E[Store User Interaction];
     E[Store User Interaction] --> F[Update Training Labels];
