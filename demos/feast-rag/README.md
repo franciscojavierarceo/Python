@@ -27,8 +27,9 @@ flowchart TD;
     A[Pull Data] --> B[Batch Score Embeddings];
     B[Batch Score] --> C[Materialize Online];
     C[Materialize Online] --> D[Retrieval Augmented Generation];
-    D[Retrieval Augmented Generation] --> E[Update Training Labels];
-    E[Update Training Labels] --> F[Fine Tuning];
-    F[Fine Tuning] --> B[Batch Score Embeddings];
+    D[Retrieval Augmented Generation] --> E[Store User Interaction];
+    E[Store User Interaction] --> F[Update Training Labels];
+    F[Update Training Labels] --> G[Fine Tuning];
+    H[Fine Tuning] --> B[Batch Score Embeddings];
 ```
 
