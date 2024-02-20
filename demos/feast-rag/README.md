@@ -24,9 +24,9 @@ python batch_score_documents.py
 
 ```mermaid
 graph TD;
-    A[Pull Data] --> B[Batch Score] | test |
-    B[Materialize Online] --> C[Retrieval Augmented Generation]
-    C[Retrieval Augmented Generation] --> D[Update Training Labels]
-    D[Update Training Labels] --> E[Fine Tuning]
+    A[Pull Data] --> B[Batch Score]|;
+    B[Materialize Online] --> C[Retrieval Augmented Generation];
+    C[Retrieval Augmented Generation] --> D[Update Training Labels];
+    D[Update Training Labels] --> E[Fine Tuning];
 ```
 
