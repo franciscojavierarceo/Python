@@ -19,6 +19,7 @@ def main() -> None:
     sqlite_version, vec_version = db.execute(
         "select sqlite_version(), vec_version()"
     ).fetchone()
+    
     print(f"sqlite_version={sqlite_version}, vec_version={vec_version}")
 
     items = [
