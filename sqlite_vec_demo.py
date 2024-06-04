@@ -1,3 +1,4 @@
+import sys
 import sqlite3
 import sqlite_vec
 
@@ -19,7 +20,7 @@ def main() -> None:
     sqlite_version, vec_version = db.execute(
         "select sqlite_version(), vec_version()"
     ).fetchone()
-    print(f"sqlite_version={sqlite_version}, vec_version={vec_version}")
+    print(f"sqlite_version={sqlite_version}, vec_version={vec_version}, python_version={sys.version}")
 
     items = [
         (1, [0.1, 0.1, 0.1, 0.1]),
