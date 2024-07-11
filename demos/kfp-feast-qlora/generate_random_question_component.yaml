@@ -1,0 +1,86 @@
+# PIPELINE DEFINITION
+# Name: generate-random-question
+# Outputs:
+#    output_path: system.Dataset
+components:
+  comp-generate-random-question:
+    executorLabel: exec-generate-random-question
+    outputDefinitions:
+      artifacts:
+        output_path:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-generate-random-question:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - generate_random_question
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef generate_random_question(output_path: Output[Dataset]):\n   \
+          \ topics = [\n        \"science\", \"history\", \"technology\", \"mathematics\"\
+          , \n        \"geography\", \"literature\", \"sports\", \"art\", \n     \
+          \   \"music\", \"cinema\"\n    ]\n\n    question_patterns = [\n        \"\
+          What are the key principles of {}?\",\n        \"Who are the most influential\
+          \ figures in {}?\",\n        \"How has {} evolved over the years?\",\n \
+          \       \"What are some common misconceptions about {}?\",\n        \"Can\
+          \ you explain the theory of {}?\",\n        \"What role does {} play in\
+          \ modern society?\",\n        \"How does {} affect our daily lives?\",\n\
+          \        \"What are the future prospects of {}?\",\n        \"What are the\
+          \ major challenges in {} today?\",\n        \"How can one get started with\
+          \ {}?\",\n    ]\n\n    questions = []\n    for _ in range(50):\n       \
+          \ topic = random.choice(topics)\n        pattern = random.choice(question_patterns)\n\
+          \        question = pattern.format(topic)\n        questions.append([question])\n\
+          \n    file_path = os.path.join(output_path.path, \"random_questions.csv\"\
+          )\n    with open(file_path, \"w\", newline=\"\") as file:\n        writer\
+          \ = csv.writer(file)\n        writer.writerow([\"Question\"])\n        writer.writerows(questions)\n\
+          \n    print(f\"...Questions exported to {file_path}\")\n\n"
+        image: python:3.8
+pipelineInfo:
+  name: generate-random-question
+root:
+  dag:
+    outputs:
+      artifacts:
+        output_path:
+          artifactSelectors:
+          - outputArtifactKey: output_path
+            producerSubtask: generate-random-question
+    tasks:
+      generate-random-question:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-generate-random-question
+        taskInfo:
+          name: generate-random-question
+  outputDefinitions:
+    artifacts:
+      output_path:
+        artifactType:
+          schemaTitle: system.Dataset
+          schemaVersion: 0.0.1
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0

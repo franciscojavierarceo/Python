@@ -1,0 +1,176 @@
+{
+  "components": {
+    "comp-generate-random-question": {
+      "executorLabel": "exec-generate-random-question",
+      "outputDefinitions": {
+        "artifacts": {
+          "output_dataset": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-pull-state-data": {
+      "executorLabel": "exec-pull-state-data",
+      "outputDefinitions": {
+        "artifacts": {
+          "output_dataset": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    },
+    "comp-score-data": {
+      "executorLabel": "exec-score-data",
+      "inputDefinitions": {
+        "artifacts": {
+          "input_dataset": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      },
+      "outputDefinitions": {
+        "artifacts": {
+          "output_dataset": {
+            "artifactType": {
+              "schemaTitle": "system.Dataset",
+              "schemaVersion": "0.0.1"
+            }
+          }
+        }
+      }
+    }
+  },
+  "defaultPipelineRoot": "gs://your-bucket/pipeline-root/",
+  "deploymentSpec": {
+    "executors": {
+      "exec-generate-random-question": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "generate_random_question"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef generate_random_question(output_dataset: Output[Dataset]):\n    topics = [\n        \"science\", \"history\", \"technology\", \"mathematics\", \n        \"geography\", \"literature\", \"sports\", \"art\", \n        \"music\", \"cinema\"\n    ]\n\n    question_patterns = [\n        \"What are the key principles of {}?\",\n        \"Who are the most influential figures in {}?\",\n        \"How has {} evolved over the years?\",\n        \"What are some common misconceptions about {}?\",\n        \"Can you explain the theory of {}?\",\n        \"What role does {} play in modern society?\",\n        \"How does {} affect our daily lives?\",\n        \"What are the future prospects of {}?\",\n        \"What are the major challenges in {} today?\",\n        \"How can one get started with {}?\",\n    ]\n\n    questions = []\n    for _ in range(50):\n        topic = random.choice(topics)\n        pattern = random.choice(question_patterns)\n        question = pattern.format(topic)\n        questions.append([question])\n\n    file_path = os.path.join(output_dataset.path, \"random_questions.csv\")\n    with open(file_path, \"w\", newline=\"\") as file:\n        writer = csv.writer(file)\n        writer.writerow([\"Question\"])\n        writer.writerows(questions)\n\n    print(\"Questions exported to\", file_path)\n\n"
+          ],
+          "image": "python:3.8"
+        }
+      },
+      "exec-pull-state-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "pull_state_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef pull_state_data(output_dataset: Output[Dataset]):\n    EXPORT_PATH = output_dataset.path\n    EXPORT_FILENAME = os.path.join(EXPORT_PATH, \"city_wikipedia_summaries.csv\")\n\n    CITIES = [\n        \"New York, New York\", \"Los Angeles, California\", \"Chicago, Illinois\", \n        \"Houston, Texas\", \"Phoenix, Arizona\", \"Philadelphia, Pennsylvania\", \n        \"San Antonio, Texas\", \"San Diego, California\", \"Dallas, Texas\", \n        \"San Jose, California\", \"Austin, Texas\", \"Jacksonville, Florida\", \n        \"Fort Worth, Texas\", \"Columbus, Ohio\", \"Charlotte, North Carolina\", \n        \"San Francisco, California\", \"Indianapolis, Indiana\", \"Seattle, Washington\", \n        \"Denver, Colorado\", \"Washington, D.C.\", \"Boston, Massachusetts\", \n        \"El Paso, Texas\", \"Nashville, Tennessee\", \"Detroit, Michigan\", \n        \"Oklahoma City, Oklahoma\", \"Portland, Oregon\", \"Las Vegas, Nevada\", \n        \"Memphis, Tennessee\", \"Louisville, Kentucky\", \"Baltimore, Maryland\", \n        \"Milwaukee, Wisconsin\", \"Albuquerque, New Mexico\", \"Tucson, Arizona\", \n        \"Fresno, California\", \"Mesa, Arizona\", \"Sacramento, California\", \n        \"Atlanta, Georgia\", \"Kansas City, Missouri\", \"Colorado Springs, Colorado\", \n        \"Miami, Florida\", \"Raleigh, North Carolina\", \"Omaha, Nebraska\", \n        \"Long Beach, California\", \"Virginia Beach, Virginia\", \"Oakland, California\", \n        \"Minneapolis, Minnesota\", \"Tulsa, Oklahoma\", \"Arlington, Texas\", \n        \"Tampa, Florida\", \"New Orleans, Louisiana\"\n    ]\n\n    def get_wikipedia_summary(cities):\n        city_summaries = {}\n        for city in cities:\n            try:\n                city_summaries[city] = wiki.summary(city)\n            except:\n                print(f\"error retrieving {city}\")\n        return city_summaries\n\n    def write_data(output_dict):\n        df = pd.DataFrame([output_dict]).T.reset_index()\n        df.columns = [\"City\", \"Wiki Summary\"]\n        df.to_csv(EXPORT_FILENAME, index=False)\n\n    city_summary_output = get_wikipedia_summary(CITIES)\n    write_data(city_summary_output)\n    print(f\"Data exported to {EXPORT_FILENAME}\")\n\n"
+          ],
+          "image": "python:3.8"
+        }
+      },
+      "exec-score-data": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "score_data"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef score_data(input_dataset: Input[Dataset], output_dataset: Output[Dataset]):\n    INPUT_FILENAME = input_dataset.path\n    EXPORT_FILENAME = os.path.join(output_dataset.path, \"city_wikipedia_summaries_with_embeddings.parquet\")\n    TOKENIZER = \"sentence-transformers/all-MiniLM-L6-v2\"\n    MODEL = \"sentence-transformers/all-MiniLM-L6-v2\"\n\n    def mean_pooling(model_output, attention_mask):\n        token_embeddings = model_output[0]\n        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()\n        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)\n\n    def run_model(sentences, tokenizer, model):\n        encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors=\"pt\")\n        with torch.no_grad():\n            model_output = model(**encoded_input)\n        sentence_embeddings = mean_pooling(model_output, encoded_input[\"attention_mask\"])\n        sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)\n        return sentence_embeddings\n\n    df = pd.read_csv(INPUT_FILENAME)\n    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)\n    model = AutoModel.from_pretrained(MODEL)\n    embeddings = run_model(df[\"Wiki Summary\"].tolist(), tokenizer, model)\n    df[\"Embeddings\"] = list(embeddings.detach().cpu().numpy())\n    df[\"event_timestamp\"] = pd.to_datetime(\"today\")\n    df[\"item_id\"] = df.index\n    df.to_parquet(EXPORT_FILENAME, index=False)\n    print(\"Data exported to\", EXPORT_FILENAME)\n\n"
+          ],
+          "image": "python:3.8"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "description": "A pipeline to pull city Wikipedia summaries, generate embeddings, and create random questions.",
+    "name": "city-wikipedia-summaries-pipeline"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "generate-random-question": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-generate-random-question"
+          },
+          "taskInfo": {
+            "name": "generate-random-question"
+          }
+        },
+        "pull-state-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-pull-state-data"
+          },
+          "taskInfo": {
+            "name": "pull-state-data"
+          }
+        },
+        "score-data": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-score-data"
+          },
+          "dependentTasks": [
+            "pull-state-data"
+          ],
+          "inputs": {
+            "artifacts": {
+              "input_dataset": {
+                "taskOutputArtifact": {
+                  "outputArtifactKey": "output_dataset",
+                  "producerTask": "pull-state-data"
+                }
+              }
+            }
+          },
+          "taskInfo": {
+            "name": "score-data"
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.7.0"
+}

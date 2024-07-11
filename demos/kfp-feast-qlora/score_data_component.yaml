@@ -1,0 +1,106 @@
+# PIPELINE DEFINITION
+# Name: score-data
+# Inputs:
+#    input_path: system.Dataset
+# Outputs:
+#    output_path: system.Dataset
+components:
+  comp-score-data:
+    executorLabel: exec-score-data
+    inputDefinitions:
+      artifacts:
+        input_path:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        output_path:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-score-data:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - score_data
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef score_data(input_path: Input[Dataset], output_path: Output[Dataset]):\n\
+          \    INPUT_FILENAME = input_path.path\n    EXPORT_FILENAME = os.path.join(output_path.path,\
+          \ \"city_wikipedia_summaries_with_embeddings.parquet\")\n    TOKENIZER =\
+          \ \"sentence-transformers/all-MiniLM-L6-v2\"\n    MODEL = \"sentence-transformers/all-MiniLM-L6-v2\"\
+          \n\n    def mean_pooling(model_output, attention_mask):\n        token_embeddings\
+          \ = model_output[0]\n        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()\n\
+          \        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1),\
+          \ min=1e-9)\n\n    def run_model(sentences, tokenizer, model):\n       \
+          \ encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors=\"\
+          pt\")\n        with torch.no_grad():\n            model_output = model(**encoded_input)\n\
+          \        sentence_embeddings = mean_pooling(model_output, encoded_input[\"\
+          attention_mask\"])\n        sentence_embeddings = F.normalize(sentence_embeddings,\
+          \ p=2, dim=1)\n        return sentence_embeddings\n\n    print(\"Scored\
+          \ data not found...generating embeddings...\")\n    df = pd.read_csv(INPUT_FILENAME)\n\
+          \    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER)\n    model = AutoModel.from_pretrained(MODEL)\n\
+          \    embeddings = run_model(df[\"Wiki Summary\"].tolist(), tokenizer, model)\n\
+          \    df[\"Embeddings\"] = list(embeddings.detach().cpu().numpy())\n    df[\"\
+          event_timestamp\"] = pd.to_datetime(\"today\")\n    df[\"item_id\"] = df.index\n\
+          \    df.to_parquet(EXPORT_FILENAME, index=False)\n    print(\"...Data exported.\
+          \ Job complete\")\n\n"
+        image: python:3.8
+pipelineInfo:
+  name: score-data
+root:
+  dag:
+    outputs:
+      artifacts:
+        output_path:
+          artifactSelectors:
+          - outputArtifactKey: output_path
+            producerSubtask: score-data
+    tasks:
+      score-data:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-score-data
+        inputs:
+          artifacts:
+            input_path:
+              componentInputArtifact: input_path
+        taskInfo:
+          name: score-data
+  inputDefinitions:
+    artifacts:
+      input_path:
+        artifactType:
+          schemaTitle: system.Dataset
+          schemaVersion: 0.0.1
+  outputDefinitions:
+    artifacts:
+      output_path:
+        artifactType:
+          schemaTitle: system.Dataset
+          schemaVersion: 0.0.1
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0

@@ -1,0 +1,99 @@
+# PIPELINE DEFINITION
+# Name: pull-state-data
+# Outputs:
+#    output_path: system.Dataset
+components:
+  comp-pull-state-data:
+    executorLabel: exec-pull-state-data
+    outputDefinitions:
+      artifacts:
+        output_path:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-pull-state-data:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - pull_state_data
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef pull_state_data(output_path: Output[Dataset]):\n    EXPORT_PATH\
+          \ = output_path.path\n    EXPORT_FILENAME = os.path.join(EXPORT_PATH, \"\
+          city_wikipedia_summaries.csv\")\n\n    CITIES = [\n        \"New York, New\
+          \ York\", \"Los Angeles, California\", \"Chicago, Illinois\", \n       \
+          \ \"Houston, Texas\", \"Phoenix, Arizona\", \"Philadelphia, Pennsylvania\"\
+          , \n        \"San Antonio, Texas\", \"San Diego, California\", \"Dallas,\
+          \ Texas\", \n        \"San Jose, California\", \"Austin, Texas\", \"Jacksonville,\
+          \ Florida\", \n        \"Fort Worth, Texas\", \"Columbus, Ohio\", \"Charlotte,\
+          \ North Carolina\", \n        \"San Francisco, California\", \"Indianapolis,\
+          \ Indiana\", \"Seattle, Washington\", \n        \"Denver, Colorado\", \"\
+          Washington, D.C.\", \"Boston, Massachusetts\", \n        \"El Paso, Texas\"\
+          , \"Nashville, Tennessee\", \"Detroit, Michigan\", \n        \"Oklahoma\
+          \ City, Oklahoma\", \"Portland, Oregon\", \"Las Vegas, Nevada\", \n    \
+          \    \"Memphis, Tennessee\", \"Louisville, Kentucky\", \"Baltimore, Maryland\"\
+          , \n        \"Milwaukee, Wisconsin\", \"Albuquerque, New Mexico\", \"Tucson,\
+          \ Arizona\", \n        \"Fresno, California\", \"Mesa, Arizona\", \"Sacramento,\
+          \ California\", \n        \"Atlanta, Georgia\", \"Kansas City, Missouri\"\
+          , \"Colorado Springs, Colorado\", \n        \"Miami, Florida\", \"Raleigh,\
+          \ North Carolina\", \"Omaha, Nebraska\", \n        \"Long Beach, California\"\
+          , \"Virginia Beach, Virginia\", \"Oakland, California\", \n        \"Minneapolis,\
+          \ Minnesota\", \"Tulsa, Oklahoma\", \"Arlington, Texas\", \n        \"Tampa,\
+          \ Florida\", \"New Orleans, Louisiana\"\n    ]\n\n    def get_wikipedia_summary(cities):\n\
+          \        city_summaries = {}\n        for city in cities:\n            try:\n\
+          \                city_summaries[city] = wiki.summary(city)\n           \
+          \ except:\n                print(f\"error retrieving {city}\")\n       \
+          \ return city_summaries\n\n    def write_data(output_dict):\n        df\
+          \ = pd.DataFrame([output_dict]).T.reset_index()\n        df.columns = [\"\
+          City\", \"Wiki Summary\"]\n        df.to_csv(EXPORT_FILENAME, index=False)\n\
+          \n    print(\"Data not found, pulling Wikipedia city summaries...\")\n \
+          \   city_summary_output = get_wikipedia_summary(CITIES)\n    write_data(city_summary_output)\n\
+          \    print(f\"...Data exported to {EXPORT_FILENAME}\")\n\n"
+        image: python:3.8
+pipelineInfo:
+  name: pull-state-data
+root:
+  dag:
+    outputs:
+      artifacts:
+        output_path:
+          artifactSelectors:
+          - outputArtifactKey: output_path
+            producerSubtask: pull-state-data
+    tasks:
+      pull-state-data:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-pull-state-data
+        taskInfo:
+          name: pull-state-data
+  outputDefinitions:
+    artifacts:
+      output_path:
+        artifactType:
+          schemaTitle: system.Dataset
+          schemaVersion: 0.0.1
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0
