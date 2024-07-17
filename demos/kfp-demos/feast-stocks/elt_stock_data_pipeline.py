@@ -53,7 +53,16 @@ def get_dates_to_pull(
 
 
 def save_data_to_parquet(df: pd.DataFrame, base_path: str):
-    df.to_parquet(base_path, index=False, partition_cols=["date_i:ndx"])
+    unique_dates = df["date_i:ndx"].astype(str).unique().tolist()
+    missing_dates = [
+        j for j in unique_dates if f"date_i:ndx={j}" not in os.listdir("data/")
+    ]
+    if len(missing_dates) > 0:
+        print(f"exporting {len(missing_dates)} more file(s)")
+        dfss = df[df["date_i:ndx"].astype(str).str.contains("|".join(missing_dates))]
+        dfss.to_parquet(base_path, index=False, partition_cols=["date_i:ndx"])
+    else:
+        print("exporting 0 files - no new data found")
 
 
 def pull_stock_data(
@@ -71,6 +80,18 @@ def pull_stock_data(
     return df
 
 
+def pull_all_stock_data(
+    ticker_list: list[str],
+    start_date: str = "2024-01-01",
+    sleep_time: int = 30,
+) -> pd.DataFrame:
+    stock_data_dict = {}
+    for ticker in ticker_list:
+        stock_data_dict[ticker] = pull_stock_data(ticker, start_date)
+        time.sleep(sleep_time)
+    return stock_data_dict
+
+
 def get_or_load_historical_data(
     output_filename: str, start_date: str = "2024-01-01"
 ) -> Tuple[pd.DataFrame, dict]:
@@ -81,12 +102,9 @@ def get_or_load_historical_data(
             ndx_df = df_dict[ndx_ticker]
     else:
         print("no stored data found, calling polygon api...")
-        assert 1 == 0
         ndx_df = pull_stock_data(ndx_ticker, start_date)
-        df_dict = {ndx_ticker: ndx_df}
-        for ticker in stock_list:
-            df_dict[ticker] = pull_stock_data(ticker, start_date)
-            time.sleep(30)
+        df_dict = pull_all_stock_data(stock_list, start_date)
+        df_dict[ndx_ticker] = ndx_df
 
         with open("ticker_data.pkl", "wb") as output_file:
             pickle.dump(df_dict, output_file)
@@ -225,6 +243,24 @@ def batch_score_data(model: SimpleNN, features: torch.Tensor) -> torch.Tensor:
     return predictions
 
 
+def update_and_dedupe_full_dict(df_dict: dict, latest_df_dict: dict) -> None:
+    # storing an archive in case something breaks
+    with open(f"archive/ticker_data_{todays_date}.pkl", "wb") as output_file:
+        pickle.dump(df_dict, output_file)
+    for ticker in df_dict:
+        df_dict[ticker] = pd.concat(
+            [
+                df_dict[ticker],
+                latest_df_dict[ticker],
+            ],
+            axis=0,
+        ).drop_duplicates()
+
+    # over-writing the main file
+    with open("ticker_data.pkl", "wb") as output_file:
+        pickle.dump(df_dict, output_file)
+
+
 def main():
     successful_dates = get_successful_dates(log_file)
     dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)
@@ -248,8 +284,27 @@ def main():
     )
     save_data_to_parquet(finaldf, f"{data_directory}/")
 
-    loaded_successful_dates = finaldf["date_i:ndx"].astype(str).tolist()
-    log_successful_dates(loaded_successful_dates, log_file)
+    maxdate_val = finaldf["date_i:ndx"].max()
+    yesterdays_date_val = datetime.date.today() - datetime.timedelta(days=1)
+    if maxdate_val != yesterdays_date_val:
+        maxdate = f"{maxdate_val}"
+        print(f"getting latest data starting from {maxdate}...")
+        latest_df_dict = pull_all_stock_data([ndx_ticker] + stock_list, maxdate)
+        update_and_dedupe_full_dict(df_dict, latest_df_dict)
+        ndx_df_new = latest_df_dict[ndx_ticker]
+        del latest_df_dict[ndx_ticker]
+        newdf = create_model_dataset(
+            ndx_df_new,
+            ndx_ticker,
+            columns_to_process,
+            latest_df_dict,
+            n_lags,
+            max_window_size,
+        )
+        save_data_to_parquet(newdf, f"{data_directory}/")
+
+        loaded_successful_dates = finaldf["date_i:ndx"].astype(str).tolist()
+        log_successful_dates(loaded_successful_dates, log_file)
 
     print(f"final dataset has {len(list(finaldf.columns))} columns")
     feature_list = sorted(
