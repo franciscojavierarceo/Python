@@ -145,6 +145,9 @@ def create_model_dataset(
                 left_on=f"date_{main_ticker.lower()}",
                 right_on=f"date_{ticker.lower()}",
             )
+    mindate = finaldf['date_i:ndx'].min()
+    maxdate = finaldf['date_i:ndx'].max()
+    print(f"training data ranging from {mindate} to {maxdate}")
     return finaldf
 
 
@@ -179,7 +182,7 @@ def train_model(
 
         # Forward pass
         outputs = model(features)
-        loss = criterion(outputs, labels)
+        loss = criterion(outputs, labels.view(-1, 1))
 
         # Backward pass and optimization
         optimizer.zero_grad()
