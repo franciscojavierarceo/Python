@@ -28,6 +28,7 @@ stock_list = [
 ]
 data_directory = "data"
 log_file = "successful_dates.log"
+model_filename = "ndx_model_weights.pth"
 
 
 def get_successful_dates(log_file: str) -> set[str]:
@@ -145,8 +146,8 @@ def create_model_dataset(
                 left_on=f"date_{main_ticker.lower()}",
                 right_on=f"date_{ticker.lower()}",
             )
-    mindate = finaldf['date_i:ndx'].min()
-    maxdate = finaldf['date_i:ndx'].max()
+    mindate = finaldf["date_i:ndx"].min()
+    maxdate = finaldf["date_i:ndx"].max()
     print(f"training data ranging from {mindate} to {maxdate}")
     return finaldf
 
@@ -192,8 +193,28 @@ def train_model(
         if (epoch + 1) % 10 == 0:
             print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}")
 
-    torch.save(model.state_dict(), "ndx_model_weights.pth")
+    torch.save(model.state_dict(), model_filename)
     print("Training complete.")
+
+
+def train_or_load_model(
+    features: torch.Tensor,
+    labels: torch.Tensor,
+    learning_rate: float = 0.1,
+    epochs: int = 200,
+) -> SimpleNN:
+    input_size = features.shape[1]  # Number of features
+    hidden_size = 32  # Number of hidden units
+    output_size = labels.dim()  # Number of output units
+    model = SimpleNN(input_size, hidden_size, output_size)
+    if model_filename in os.listdir():
+        print("loading existing model...")
+        weights = torch.load(model_filename)
+        model.load_state_dict(weights)
+    else:
+        train_model(model, features, labels, learning_rate, epochs)
+        torch.save(model.state_dict(), model_filename)
+    return model
 
 
 def batch_score_data(model: SimpleNN, features: torch.Tensor) -> torch.Tensor:
@@ -243,11 +264,7 @@ def main():
     )
     labels = torch.from_numpy(finaldf["open_i:ndx"].values[n_lags:].astype(np.float32))
 
-    input_size = features.shape[1]  # Number of features
-    hidden_size = 32  # Number of hidden units
-    output_size = 1  # Number of output units
-    model = SimpleNN(input_size, hidden_size, output_size)
-    train_model(model, features, labels, 0.1, 200)
+    model = train_or_load_model(features, labels, 0.1, 200)
 
     predictions = batch_score_data(model, features)
     print(f"RMSE = {torch.sqrt( torch.mean( (predictions- labels) ** 2) )}")
