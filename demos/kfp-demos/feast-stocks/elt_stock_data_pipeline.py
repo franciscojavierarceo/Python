@@ -13,10 +13,9 @@ from typing import Tuple
 
 ndx_ticker = "I:NDX"
 start_date = "2024-01-01"
-
+todays_date = datetime.datetime.now().date().strftime("%Y-%m-%d")
 POLYGON_API_KEY = os.environ["POLYGON_API_KEY"]
 client = RESTClient(POLYGON_API_KEY)
-
 stock_list = [
     "AAPL",
     "AMZN",
@@ -27,11 +26,36 @@ stock_list = [
     "NVDA",
     "TSLA",
 ]
-
 data_directory = "data"
+log_file = "successful_dates.log"
 
 
-def get_daily_data(
+def get_successful_dates(log_file: str) -> set[str]:
+    if not os.path.exists(log_file):
+        return set()
+    with open(log_file, "r") as f:
+        dates = f.read().splitlines()
+    return set(dates)
+
+
+def log_successful_dates(dates: list[str], log_file: str) -> None:
+    with open(log_file, "a") as f:
+        for date in dates:
+            f.write(f"{date}\n")
+
+
+def get_dates_to_pull(
+    start_date: str, end_date: str, successful_dates: list[str]
+) -> list[str]:
+    business_days = pd.bdate_range(start_date, end_date).strftime("%Y-%m-%d").tolist()
+    return [date for date in business_days if date not in successful_dates]
+
+
+def save_data_to_parquet(df: pd.DataFrame, base_path: str):
+    df.to_parquet(base_path, index=False, partition_cols=["date_i:ndx"])
+
+
+def pull_stock_data(
     ticker: str = "I:NDX", start_date: str = "2024-01-01"
 ) -> pd.DataFrame:
     daily_ticker_data = []
@@ -46,15 +70,21 @@ def get_daily_data(
     return df
 
 
-def get_or_load_historical_data(output_filename: str) -> Tuple[pd.DataFrame, dict]:
+def get_or_load_historical_data(
+    output_filename: str, start_date: str = "2024-01-01"
+) -> Tuple[pd.DataFrame, dict]:
     if output_filename in os.listdir():
+        print("loading stored data...")
         with open("ticker_data.pkl", "rb") as output_file:
             df_dict = pickle.load(output_file)
+            ndx_df = df_dict[ndx_ticker]
     else:
-        ndx_df = get_daily_data(ndx_ticker)
+        print("no stored data found, calling polygon api...")
+        assert 1 == 0
+        ndx_df = pull_stock_data(ndx_ticker, start_date)
         df_dict = {ndx_ticker: ndx_df}
         for ticker in stock_list:
-            df_dict[ticker] = get_daily_data(ticker)
+            df_dict[ticker] = pull_stock_data(ticker, start_date)
             time.sleep(30)
 
         with open("ticker_data.pkl", "wb") as output_file:
@@ -79,7 +109,7 @@ def calculate_sliding_window_averages(
             df[column_name] = df[columns_to_window].mean(axis=1)
 
 
-def feature_pipeline(
+def run_feature_pipeline(
     df: pd.DataFrame, features: list[str], n_lags: int = 5, max_window_size: int = 5
 ) -> None:
     for c in features:
@@ -96,12 +126,12 @@ def create_model_dataset(
     max_window_size: int,
 ) -> pd.DataFrame:
     finaldf = df.copy()
-    feature_pipeline(df, columns_to_process, n_lags, max_window_size)
+    run_feature_pipeline(df, columns_to_process, n_lags, max_window_size)
     finaldf.columns = [f"{c}_{main_ticker.lower()}" for c in finaldf.columns]
 
     for ticker in ticker_df_dict:
         if ticker != main_ticker:
-            feature_pipeline(
+            run_feature_pipeline(
                 ticker_df_dict[ticker], columns_to_process, n_lags, max_window_size
             )
             finaldf = finaldf.merge(
@@ -159,6 +189,7 @@ def train_model(
         if (epoch + 1) % 10 == 0:
             print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}")
 
+    torch.save(model.state_dict(), "ndx_model_weights.pth")
     print("Training complete.")
 
 
@@ -171,14 +202,18 @@ def batch_score_data(model: SimpleNN, features: torch.Tensor) -> torch.Tensor:
 
 
 def main():
-    todays_date = datetime.datetime.now().date().strftime("%Y-%m-%d")
+    successful_dates = get_successful_dates(log_file)
+    dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)
+
     output_filename = "ticker_data.pkl"
     columns_to_process = ["open", "low", "high"]
     n_lags, max_window_size = 5, 5
+
     ndx_df, df_dict = get_or_load_historical_data(
         output_filename,
         start_date,
     )
+
     finaldf = create_model_dataset(
         ndx_df,
         ndx_ticker,
@@ -187,6 +222,10 @@ def main():
         n_lags,
         max_window_size,
     )
+    save_data_to_parquet(finaldf, f"{data_directory}/")
+
+    loaded_successful_dates = finaldf["date_i:ndx"].astype(str).tolist()
+    log_successful_dates(loaded_successful_dates, log_file)
 
     print(f"final dataset has {len(list(finaldf.columns))} columns")
     feature_list = sorted(
@@ -199,16 +238,19 @@ def main():
     features = torch.from_numpy(
         finaldf[feature_list].values[n_lags:, :].astype(np.float32)
     )
-    labels = torch.from_numpy(finaldf["open_ndx"].values[n_lags:].astype(np.float32))
+    labels = torch.from_numpy(finaldf["open_i:ndx"].values[n_lags:].astype(np.float32))
 
     input_size = features.shape[1]  # Number of features
     hidden_size = 32  # Number of hidden units
     output_size = 1  # Number of output units
     model = SimpleNN(input_size, hidden_size, output_size)
     train_model(model, features, labels, 0.1, 200)
+
     predictions = batch_score_data(model, features)
     print(f"RMSE = {torch.sqrt( torch.mean( (predictions- labels) ** 2) )}")
     finaldf["predictions"] = None
     finaldf.loc[n_lags:, "predictions"] = predictions
 
-    torch.save(model.state_dict(), "ndx_model_weights.pth")
+
+if __name__ == "__main__":
+    main()
