@@ -27,6 +27,7 @@ stock_list = [
     "TSLA",
 ]
 data_directory = "data"
+predictions_directory = "predictions"
 log_file = "successful_dates.log"
 model_filename = "ndx_model_weights.pth"
 
@@ -55,7 +56,7 @@ def get_dates_to_pull(
 def save_data_to_parquet(df: pd.DataFrame, base_path: str):
     unique_dates = df["date_i:ndx"].astype(str).unique().tolist()
     missing_dates = [
-        j for j in unique_dates if f"date_i:ndx={j}" not in os.listdir("data/")
+        j for j in unique_dates if f"date_i:ndx={j}" not in os.listdir(base_path)
     ]
     if len(missing_dates) > 0:
         print(f"exporting {len(missing_dates)} more file(s)")
@@ -323,8 +324,20 @@ def main():
 
     predictions = batch_score_data(model, features)
     print(f"RMSE = {torch.sqrt( torch.mean( (predictions- labels) ** 2) )}")
+
     finaldf["predictions"] = None
     finaldf.loc[n_lags:, "predictions"] = predictions
+    finaldf["run_date"] = todays_date
+
+    prediction_df_columns_to_save = [
+        "date_i:ndx",
+        "open_i:ndx",
+        "predictions",
+        "run_date",
+    ]
+    save_data_to_parquet(
+        finaldf[prediction_df_columns_to_save], f"{predictions_directory}/"
+    )
 
 
 if __name__ == "__main__":
