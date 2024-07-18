@@ -9,7 +9,7 @@ import torch.optim as optim
 import numpy as np
 import pandas as pd
 from polygon import RESTClient
-from typing import Tuple
+from typing import Tuple, Union
 
 ndx_ticker = "I:NDX"
 start_date = "2024-01-01"
@@ -139,7 +139,6 @@ def run_feature_pipeline(
 
 def create_model_dataset(
     df: pd.DataFrame,
-    main_ticker: str,
     columns_to_process: list[str],
     ticker_df_dict: dict,
     n_lags: int,
@@ -147,10 +146,10 @@ def create_model_dataset(
 ) -> pd.DataFrame:
     finaldf = df.copy()
     run_feature_pipeline(df, columns_to_process, n_lags, max_window_size)
-    finaldf.columns = [f"{c}_{main_ticker.lower()}" for c in finaldf.columns]
+    finaldf.columns = [f"{c}_{ndx_ticker.lower()}" for c in finaldf.columns]
 
     for ticker in ticker_df_dict:
-        if ticker != main_ticker:
+        if ticker != ndx_ticker:
             ticker_df = ticker_df_dict[ticker].copy()
 
             run_feature_pipeline(ticker_df, columns_to_process, n_lags, max_window_size)
@@ -159,12 +158,12 @@ def create_model_dataset(
                     columns={c: f"{c}_{ticker.lower()}" for c in ticker_df.columns},
                 ),
                 how="left",
-                left_on=f"date_{main_ticker.lower()}",
+                left_on=f"date_{ndx_ticker.lower()}",
                 right_on=f"date_{ticker.lower()}",
             )
 
     finaldf.drop_duplicates(
-        subset=[f"date_{main_ticker.lower()}"],
+        subset=[f"date_{ndx_ticker.lower()}"],
         inplace=True,
     )
 
@@ -265,6 +264,37 @@ def update_and_dedupe_full_dict(df_dict: dict, latest_df_dict: dict) -> None:
         pickle.dump(df_dict, output_file)
 
 
+def get_latest_data(
+    max_date_val: datetime.date,
+    df_dict: dict,
+    columns_to_process: list[str],
+    n_lags: int,
+    max_window_size: int,
+) -> Union[None, pd.DataFrame]:
+    yesterdays_date_val = datetime.date.today() - datetime.timedelta(days=1)
+    if max_date_val != yesterdays_date_val:
+        maxdate = f"{max_date_val}"
+        print(f"getting latest data starting from {maxdate}...")
+        latest_df_dict = pull_all_stock_data(
+            [ndx_ticker] + stock_list, start_date=maxdate
+        )
+        update_and_dedupe_full_dict(df_dict, latest_df_dict)
+        ndx_df_new = latest_df_dict[ndx_ticker]
+        del latest_df_dict[ndx_ticker]
+        newdf = create_model_dataset(
+            ndx_df_new,
+            columns_to_process,
+            latest_df_dict,
+            n_lags,
+            max_window_size,
+        )
+        save_data_to_parquet(newdf, f"{data_directory}/")
+
+        loaded_successful_dates = newdf["date_i:ndx"].astype(str).tolist()
+        log_successful_dates(loaded_successful_dates, log_file)
+        return newdf
+
+
 def main():
     successful_dates = get_successful_dates(log_file)
     dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)
@@ -280,7 +310,6 @@ def main():
 
     finaldf = create_model_dataset(
         ndx_df,
-        ndx_ticker,
         columns_to_process,
         df_dict,
         n_lags,
@@ -289,26 +318,11 @@ def main():
     save_data_to_parquet(finaldf, f"{data_directory}/")
 
     maxdate_val = finaldf["date_i:ndx"].max()
-    yesterdays_date_val = datetime.date.today() - datetime.timedelta(days=1)
-    if maxdate_val != yesterdays_date_val:
-        maxdate = f"{maxdate_val}"
-        print(f"getting latest data starting from {maxdate}...")
-        latest_df_dict = pull_all_stock_data([ndx_ticker] + stock_list, maxdate)
-        update_and_dedupe_full_dict(df_dict, latest_df_dict)
-        ndx_df_new = latest_df_dict[ndx_ticker]
-        del latest_df_dict[ndx_ticker]
-        newdf = create_model_dataset(
-            ndx_df_new,
-            ndx_ticker,
-            columns_to_process,
-            latest_df_dict,
-            n_lags,
-            max_window_size,
-        )
-        save_data_to_parquet(newdf, f"{data_directory}/")
-
-        loaded_successful_dates = finaldf["date_i:ndx"].astype(str).tolist()
-        log_successful_dates(loaded_successful_dates, log_file)
+    newdf = get_latest_data(
+        maxdate_val, df_dict, columns_to_process, n_lags, max_window_size
+    )
+    if newdf is not None:
+        finaldf = pd.concat([finaldf, newdf], axis=0)
 
     print(f"final dataset has {len(list(finaldf.columns))} columns")
     feature_list = sorted(
@@ -322,7 +336,6 @@ def main():
         finaldf[feature_list].values[n_lags:, :].astype(np.float32)
     )
     labels = torch.from_numpy(finaldf["open_i:ndx"].values[n_lags:].astype(np.float32))
-
     model = train_or_load_model(features, labels, 0.1, 200)
 
     predictions = batch_score_data(model, features)
