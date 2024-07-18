@@ -151,20 +151,23 @@ def create_model_dataset(
 
     for ticker in ticker_df_dict:
         if ticker != main_ticker:
-            run_feature_pipeline(
-                ticker_df_dict[ticker], columns_to_process, n_lags, max_window_size
-            )
+            ticker_df = ticker_df_dict[ticker].copy()
+
+            run_feature_pipeline(ticker_df, columns_to_process, n_lags, max_window_size)
             finaldf = finaldf.merge(
-                ticker_df_dict[ticker].rename(
-                    columns={
-                        c: f"{c}_{ticker.lower()}"
-                        for c in ticker_df_dict[ticker].columns
-                    },
+                ticker_df.rename(
+                    columns={c: f"{c}_{ticker.lower()}" for c in ticker_df.columns},
                 ),
                 how="left",
                 left_on=f"date_{main_ticker.lower()}",
                 right_on=f"date_{ticker.lower()}",
             )
+
+    finaldf.drop_duplicates(
+        subset=[f"date_{main_ticker.lower()}"],
+        inplace=True,
+    )
+
     mindate = finaldf["date_i:ndx"].min()
     maxdate = finaldf["date_i:ndx"].max()
     print(f"training data ranging from {mindate} to {maxdate}")
@@ -255,7 +258,7 @@ def update_and_dedupe_full_dict(df_dict: dict, latest_df_dict: dict) -> None:
                 latest_df_dict[ticker],
             ],
             axis=0,
-        ).drop_duplicates()
+        )
 
     # over-writing the main file
     with open("ticker_data.pkl", "wb") as output_file:
@@ -338,6 +341,7 @@ def main():
     save_data_to_parquet(
         finaldf[prediction_df_columns_to_save], f"{predictions_directory}/"
     )
+    print(f"latest predictions:\n{finaldf[prediction_df_columns_to_save].tail()}")
 
 
 if __name__ == "__main__":
