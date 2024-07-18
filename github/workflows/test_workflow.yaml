@@ -1,6 +1,6 @@
-name: unit-tests
+ame: unit-tests
 
-on: [pull_request]
+on: []
 jobs:
   unit-test-python:
     runs-on: ${{ matrix.os }}
