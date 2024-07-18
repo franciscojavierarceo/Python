@@ -12,3 +12,12 @@ Going to start small with
 6. Web App to ask for should I buy?
  - This should call the online model to get a score and
     if the score > 0.7 return "no"
+
+
+# Jupyter
+
+Startup in the `demos/` repo
+
+```
+jupyter-lab
+```
