@@ -98,7 +98,7 @@ def get_or_load_historical_data(
 ) -> Tuple[pd.DataFrame, dict]:
     if output_filename in os.listdir():
         print("loading stored data...")
-        with open("ticker_data.pkl", "rb") as output_file:
+        with open(output_filename, "rb") as output_file:
             df_dict = pickle.load(output_file)
             ndx_df = df_dict[ndx_ticker]
     else:
@@ -107,7 +107,7 @@ def get_or_load_historical_data(
         df_dict = pull_all_stock_data(stock_list, start_date)
         df_dict[ndx_ticker] = ndx_df
 
-        with open("ticker_data.pkl", "wb") as output_file:
+        with open(output_filename, "wb") as output_file:
             pickle.dump(df_dict, output_file)
     return ndx_df, df_dict
 
