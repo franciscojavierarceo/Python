@@ -43,7 +43,6 @@ executing==2.0.1
 fastapi==0.109.2
 fastapi-cli==0.0.4
 fastjsonschema==2.20.0
-feast==0.39.1
 filelock==3.15.4
 fonttools==4.53.1
 fqdn==1.5.1
@@ -90,7 +89,6 @@ kfp==2.8.0
 kfp-pipeline-spec==0.3.0
 kfp-server-api==2.0.5
 kiwisolver==1.4.5
-kserve==0.13.0
 kubernetes==26.1.0
 locket==1.0.0
 markdown-it-py==3.0.0
@@ -128,7 +126,7 @@ pathspec==0.12.1
 pexpect==4.9.0
 pillow==10.4.0
 platformdirs==4.2.2
-polygon-api-client==1.14.1
+polygon-api-client==1.14.2
 prometheus_client==0.20.0
 prompt_toolkit==3.0.47
 proto-plus==1.24.0
