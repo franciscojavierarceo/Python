@@ -560,11 +560,11 @@ def stock_data_pipeline(api_key: str) -> None:
     return None
 
 
-# Compile and run the pipeline
+# Compile the pipeline
 if __name__ == "__main__":
     from kfp.compiler import Compiler
 
-    Compiler().compile(stock_data_pipeline, "stock_data_pipeline.yaml")
+    kfp_output_yaml = "stock_data_pipeline.yaml"
+    Compiler().compile(stock_data_pipeline, kfp_output_yaml)
+    print(f"kfp compiled to {kfp_output_yaml}")
 
-    # Execute the pipeline directly
-    #stock_data_pipeline(api_key=os.environ["POLYGON_API_KEY"])
