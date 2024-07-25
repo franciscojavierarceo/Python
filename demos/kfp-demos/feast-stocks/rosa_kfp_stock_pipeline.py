@@ -4,7 +4,6 @@ import os
 import sys
 import subprocess
 
-#init(runner=SubprocessRunner(use_venv=False), pipeline_root="./local_outputs")
 base_image = 'python:3.10'
 
 my_requirements = """
