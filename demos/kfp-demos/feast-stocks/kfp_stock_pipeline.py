@@ -1,4 +1,4 @@
-from kfp import dsl
+zRom kfp import dsl
 from kfp.local import init, SubprocessRunner
 import os
 import sys
@@ -516,7 +516,7 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
     with torch.no_grad():
         predictions = model(features)
 
-    print(f"RMSE = {torch.sqrt( torch.mean( (predictions- labels) ** 2) )}")
+    print(f"RMSE = {torch.sqrt(torch.mean( (predictions - labels) ** 2) )}")
     df.loc[5:, "predictions"] = predictions.numpy()
     df["run_date"] = datetime.datetime.now().date().strftime("%Y-%m-%d")
 
