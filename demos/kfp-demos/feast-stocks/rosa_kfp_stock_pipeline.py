@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 
-base_image = 'python:3.10'
+base_image = "python:3.10"
 
 my_requirements = """
 aiohttp==3.9.5
@@ -214,7 +214,12 @@ widgetsnbextension==4.0.11
 wrapt==1.16.0
 yarl==1.9.4
 zipp==3.19.2
-""".split("\n")[1:-1]
+""".split(
+    "\n"
+)[
+    1:-1
+]
+
 
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
 def fetch_stock_data(api_key: str, output_dir: str) -> None:
@@ -411,6 +416,7 @@ def process_data(input_dir: str, output_dir: str) -> None:
     save_data_to_parquet(finaldf, os.path.join(output_dir))
     print(f"{finaldf.shape[0]} records in dataset...")
 
+
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
 def train_model(input_dir: str, output_dir: str) -> None:
     import sys
@@ -463,6 +469,7 @@ def train_model(input_dir: str, output_dir: str) -> None:
 
     os.makedirs(output_dir, exist_ok=True)
     torch.save(model.state_dict(), os.path.join(output_dir, "model.pth"))
+
 
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
 def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
@@ -518,8 +525,8 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
     print(f"predictions = {dfss.tail()}")
 
 
-#@dsl.component#(packages_to_install=my_requirements)
-#def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> None: #    import feast
+# @dsl.component#(packages_to_install=my_requirements)
+# def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> None: #    import feast
 #
 #    print(feast.__version__)
 
@@ -548,9 +555,9 @@ def stock_data_pipeline(api_key: str) -> None:
     predict_op = make_predictions(
         model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
     )
-    #tmp = materialize_online_store(
+    # tmp = materialize_online_store(
     #    model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
-    #)
+    # )
 
     # Set up dependencies
     process_op.after(fetch_op)
@@ -566,4 +573,3 @@ if __name__ == "__main__":
     kfp_output_yaml = "stock_data_pipeline.yaml"
     Compiler().compile(stock_data_pipeline, kfp_output_yaml)
     print(f"kfp compiled to {kfp_output_yaml}")
-
