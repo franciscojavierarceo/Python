@@ -1,4 +1,4 @@
-zRom kfp import dsl
+from kfp import dsl
 from kfp.local import init, SubprocessRunner
 import os
 import sys
@@ -53,6 +53,7 @@ executing==2.0.1
 fastapi==0.109.2
 fastapi-cli==0.0.4
 fastjsonschema==2.20.0
+feast==0.39.1
 filelock==3.15.4
 fonttools==4.53.1
 fqdn==1.5.1
@@ -523,13 +524,14 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
     os.makedirs(output_dir, exist_ok=True)
     dfss = df[["date_i:ndx", "open_i:ndx", "predictions", "run_date"]]
     dfss.to_parquet(os.path.join(output_dir, "predictions.parquet"), index=False)
-    print(f"predictions = {dfss.tail()}")
+    print(f"predictions =\n{dfss.tail()}")
 
 
-# @dsl.component#(packages_to_install=my_requirements)
-# def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> None: #    import feast
-#
-#    print(feast.__version__)
+@dsl.component#(packages_to_install=my_requirements)
+def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> None:
+    import feast
+
+    print(feast.__version__)
 
 
 # Create necessary directories
@@ -556,14 +558,15 @@ def stock_data_pipeline(api_key: str) -> None:
     predict_op = make_predictions(
         model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
     )
-    # tmp = materialize_online_store(
-    #    model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
-    # )
+    feast_op = materialize_online_store(
+       model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
+    )
 
     # Set up dependencies
     process_op.after(fetch_op)
     train_op.after(process_op)
     predict_op.after(train_op)
+    feast_op.after(predict_op)
     return None
 
 
