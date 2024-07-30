@@ -11,10 +11,10 @@ import pandas as pd
 from polygon import RESTClient
 from typing import Tuple, Union
 
-ndx_ticker = "I:NDX"
+NDX_TICKER = "I:NDX"
 start_date = "2024-01-01"
-todays_date = datetime.datetime.now().date().strftime("%Y-%m-%d")
 POLYGON_API_KEY = os.environ["POLYGON_API_KEY"]
+TODAYS_DATE = datetime.datetime.now().date().strftime("%Y-%m-%d")
 client = RESTClient(POLYGON_API_KEY)
 stock_list = [
     "AAPL",
@@ -71,7 +71,7 @@ def pull_stock_data(
 ) -> pd.DataFrame:
     daily_ticker_data = []
     for ticker_agg in client.list_aggs(
-        ticker=ticker, from_=start_date, to=todays_date, multiplier=1, timespan="day"
+        ticker=ticker, from_=start_date, to=TODAYS_DATE, multiplier=1, timespan="day"
     ):
         daily_ticker_data.append(ticker_agg)
 
@@ -100,12 +100,12 @@ def get_or_load_historical_data(
         print("loading stored data...")
         with open(output_filename, "rb") as output_file:
             df_dict = pickle.load(output_file)
-            ndx_df = df_dict[ndx_ticker]
+            ndx_df = df_dict[NDX_TICKER]
     else:
         print("no stored data found, calling polygon api...")
-        ndx_df = pull_stock_data(ndx_ticker, start_date)
+        ndx_df = pull_stock_data(NDX_TICKER, start_date)
         df_dict = pull_all_stock_data(stock_list, start_date)
-        df_dict[ndx_ticker] = ndx_df
+        df_dict[NDX_TICKER] = ndx_df
 
         with open(output_filename, "wb") as output_file:
             pickle.dump(df_dict, output_file)
@@ -146,10 +146,10 @@ def create_model_dataset(
 ) -> pd.DataFrame:
     finaldf = df.copy()
     run_feature_pipeline(df, columns_to_process, n_lags, max_window_size)
-    finaldf.columns = [f"{c}_{ndx_ticker.lower()}" for c in finaldf.columns]
+    finaldf.columns = [f"{c}_{NDX_TICKER.lower()}" for c in finaldf.columns]
 
     for ticker in ticker_df_dict:
-        if ticker != ndx_ticker:
+        if ticker != NDX_TICKER:
             ticker_df = ticker_df_dict[ticker].copy()
 
             run_feature_pipeline(ticker_df, columns_to_process, n_lags, max_window_size)
@@ -158,12 +158,12 @@ def create_model_dataset(
                     columns={c: f"{c}_{ticker.lower()}" for c in ticker_df.columns},
                 ),
                 how="left",
-                left_on=f"date_{ndx_ticker.lower()}",
+                left_on=f"date_{NDX_TICKER.lower()}",
                 right_on=f"date_{ticker.lower()}",
             )
 
     finaldf.drop_duplicates(
-        subset=[f"date_{ndx_ticker.lower()}"],
+        subset=[f"date_{NDX_TICKER.lower()}"],
         inplace=True,
     )
 
@@ -248,7 +248,7 @@ def batch_score_data(model: SimpleNN, features: torch.Tensor) -> torch.Tensor:
 
 def update_and_dedupe_full_dict(df_dict: dict, latest_df_dict: dict) -> None:
     # storing an archive in case something breaks
-    with open(f"archive/ticker_data_{todays_date}.pkl", "wb") as output_file:
+    with open(f"archive/ticker_data_{TODAYS_DATE}.pkl", "wb") as output_file:
         pickle.dump(df_dict, output_file)
     for ticker in df_dict:
         df_dict[ticker] = pd.concat(
@@ -276,11 +276,11 @@ def get_latest_data(
         maxdate = f"{max_date_val}"
         print(f"getting latest data starting from {maxdate}...")
         latest_df_dict = pull_all_stock_data(
-            [ndx_ticker] + stock_list, start_date=maxdate
+            [NDX_TICKER] + stock_list, start_date=maxdate
         )
         update_and_dedupe_full_dict(df_dict, latest_df_dict)
-        ndx_df_new = latest_df_dict[ndx_ticker]
-        del latest_df_dict[ndx_ticker]
+        ndx_df_new = latest_df_dict[NDX_TICKER]
+        del latest_df_dict[NDX_TICKER]
         newdf = create_model_dataset(
             ndx_df_new,
             columns_to_process,
@@ -297,7 +297,7 @@ def get_latest_data(
 
 def main():
     successful_dates = get_successful_dates(log_file)
-    dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)
+    dates_to_pull = get_dates_to_pull(start_date, TODAYS_DATE, successful_dates)
 
     output_filename = "ticker_data.pkl"
     columns_to_process = ["open", "low", "high"]
@@ -343,7 +343,7 @@ def main():
 
     finaldf["predictions"] = None
     finaldf.loc[n_lags:, "predictions"] = predictions
-    finaldf["run_date"] = todays_date
+    finaldf["run_date"] = TODAYS_DATE
 
     prediction_df_columns_to_save = [
         "date_i:ndx",
