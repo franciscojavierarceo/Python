@@ -22,6 +22,16 @@ components:
           parameterType: STRING
         output_dir:
           parameterType: STRING
+  comp-materialize-online-store:
+    executorLabel: exec-materialize-online-store
+    inputDefinitions:
+      parameters:
+        data_dir:
+          parameterType: STRING
+        model_dir:
+          parameterType: STRING
+        output_dir:
+          parameterType: STRING
   comp-process-data:
     executorLabel: exec-process-data
     inputDefinitions:
@@ -64,7 +74,7 @@ deploymentSpec:
           \ 'defusedxml==0.7.1' 'deprecation==2.1.0' 'dill==0.3.8' 'distlib==0.3.8'\
           \ 'dnspython==2.6.1' 'docstring_parser==0.16' 'email_validator==2.2.0' 'exceptiongroup==1.2.2'\
           \ 'executing==2.0.1' 'fastapi==0.109.2' 'fastapi-cli==0.0.4' 'fastjsonschema==2.20.0'\
-          \ 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
+          \ 'feast==0.39.1' 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
           \ 'fsspec==2024.6.1' 'google-api-core==2.19.1' 'google-auth==2.32.0' 'google-cloud-core==2.4.1'\
           \ 'google-cloud-storage==2.17.0' 'google-crc32c==1.5.0' 'google-resumable-media==2.7.1'\
           \ 'googleapis-common-protos==1.63.2' 'grpcio==1.64.1' 'gunicorn==22.0.0'\
@@ -120,7 +130,7 @@ deploymentSpec:
           \ *\n\ndef fetch_stock_data(api_key: str, output_dir: str) -> None:\n  \
           \  import sys\n    import subprocess\n    import time\n    import datetime\n\
           \    import os\n    import pickle\n    import pandas as pd\n    from polygon\
-          \ import RESTClient\n\n    print(\"fetching stock data...\")\n    ndx_ticker\
+          \ import RESTClient\n\n    print(\"fetching stock data...\")\n    NDX_TICKER\
           \ = \"I:NDX\"\n    start_date = \"2024-01-01\"\n    output_filename = \"\
           ticker_data.pkl\"\n    log_file = \"successful_dates.log\"\n    todays_date\
           \ = datetime.datetime.now().date().strftime(\"%Y-%m-%d\")\n    client =\
@@ -154,17 +164,17 @@ deploymentSpec:
           \ in os.listdir(output_dir):\n            print(\"loading stored data...\"\
           )\n            with open(os.path.join(output_dir, output_filename), \"rb\"\
           ) as output_file:\n                df_dict = pickle.load(output_file)\n\
-          \                ndx_df = df_dict[ndx_ticker]\n        else:\n         \
+          \                ndx_df = df_dict[NDX_TICKER]\n        else:\n         \
           \   print(\"no stored data found, calling polygon api...\")\n          \
-          \  ndx_df = pull_stock_data(ndx_ticker, start_date)\n            df_dict\
-          \ = pull_all_stock_data(stock_list, start_date)\n            df_dict[ndx_ticker]\
+          \  ndx_df = pull_stock_data(NDX_TICKER, start_date)\n            df_dict\
+          \ = pull_all_stock_data(stock_list, start_date)\n            df_dict[NDX_TICKER]\
           \ = ndx_df\n\n            with open(os.path.join(output_dir, output_filename),\
           \ \"wb\") as output_file:\n                pickle.dump(df_dict, output_file)\n\
           \        return ndx_df, df_dict\n\n    successful_dates = get_successful_dates(log_file)\n\
           \    dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)\n\
           \n    ndx_df, df_dict = get_or_load_historical_data(\n        output_dir,\n\
           \        output_filename,\n        start_date,\n    )\n\n"
-        image: python:3.10
+        image: docker.io/library/ython:3.10
     exec-make-predictions:
       container:
         args:
@@ -189,7 +199,7 @@ deploymentSpec:
           \ 'defusedxml==0.7.1' 'deprecation==2.1.0' 'dill==0.3.8' 'distlib==0.3.8'\
           \ 'dnspython==2.6.1' 'docstring_parser==0.16' 'email_validator==2.2.0' 'exceptiongroup==1.2.2'\
           \ 'executing==2.0.1' 'fastapi==0.109.2' 'fastapi-cli==0.0.4' 'fastjsonschema==2.20.0'\
-          \ 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
+          \ 'feast==0.39.1' 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
           \ 'fsspec==2024.6.1' 'google-api-core==2.19.1' 'google-auth==2.32.0' 'google-cloud-core==2.4.1'\
           \ 'google-cloud-storage==2.17.0' 'google-crc32c==1.5.0' 'google-resumable-media==2.7.1'\
           \ 'googleapis-common-protos==1.63.2' 'grpcio==1.64.1' 'gunicorn==22.0.0'\
@@ -252,22 +262,51 @@ deploymentSpec:
           \ self.relu = nn.ReLU()\n            self.fc2 = nn.Linear(hidden_size, output_size)\n\
           \n        def forward(self, x):\n            out = self.fc1(x)\n       \
           \     out = self.relu(out)\n            out = self.fc2(out)\n          \
-          \  return out\n\n    df = pd.read_parquet(os.path.join(data_dir, \"processed_data.parquet\"\
-          ))\n\n    feature_list = sorted(\n        [c for c in df.columns if (\"\
-          lag_\" in c or \"window_\" in c) and \"ndx\" not in c]\n    )\n    features\
-          \ = torch.from_numpy(df[feature_list].values[5:, :].astype(np.float32))\n\
-          \    labels = torch.from_numpy(df[\"open_i:ndx\"].values[5:].astype(np.float32))\n\
-          \n    input_size = features.shape[1]\n    hidden_size = 32\n    output_size\
-          \ = 1\n    model = SimpleNN(input_size, hidden_size, output_size)\n    model.load_state_dict(torch.load(os.path.join(model_dir,\
+          \  return out\n\n    df = pd.read_parquet(data_dir)\n\n    feature_list\
+          \ = sorted(\n        [c for c in df.columns if (\"lag_\" in c or \"window_\"\
+          \ in c) and \"ndx\" not in c]\n    )\n    features = torch.from_numpy(df[feature_list].values[5:,\
+          \ :].astype(np.float32))\n    labels = torch.from_numpy(df[\"open_i:ndx\"\
+          ].values[5:].astype(np.float32))\n\n    input_size = features.shape[1]\n\
+          \    hidden_size = 32\n    output_size = 1\n    model = SimpleNN(input_size,\
+          \ hidden_size, output_size)\n    model.load_state_dict(torch.load(os.path.join(model_dir,\
           \ \"model.pth\")))\n    model.eval()\n\n    with torch.no_grad():\n    \
-          \    predictions = model(features)\n\n    print(f\"RMSE = {torch.sqrt( torch.mean(\
-          \ (predictions- labels) ** 2) )}\")\n    df.loc[5:, \"predictions\"] = predictions.numpy()\n\
-          \    df[\"run_date\"] = datetime.datetime.now().date().strftime(\"%Y-%m-%d\"\
-          )\n\n    os.makedirs(output_dir, exist_ok=True)\n    dfss = df[[\"date_i:ndx\"\
-          , \"open_i:ndx\", \"predictions\", \"run_date\"]]\n    dfss.to_parquet(os.path.join(output_dir,\
-          \ \"predictions.parquet\"), index=False)\n    print(f\"predictions = {dfss.tail()}\"\
+          \    predictions = model(features)\n\n    print(f\"RMSE = {torch.sqrt(torch.mean(\
+          \ (predictions - labels) ** 2) )}\")\n    df.loc[5:, \"predictions\"] =\
+          \ predictions.numpy()\n    df[\"run_date\"] = datetime.datetime.now().date().strftime(\"\
+          %Y-%m-%d\")\n\n    os.makedirs(output_dir, exist_ok=True)\n    dfss = df[[\"\
+          date_i:ndx\", \"open_i:ndx\", \"predictions\", \"run_date\"]]\n    dfss.to_parquet(os.path.join(output_dir,\
+          \ \"predictions.parquet\"), index=False)\n    print(f\"predictions =\\n{dfss.tail()}\"\
           )\n\n"
-        image: python:3.10
+        image: docker.io/library/ython:3.10
+    exec-materialize-online-store:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - materialize_online_store
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef materialize_online_store(model_dir: str, data_dir: str, output_dir:\
+          \ str) -> None:\n    import feast\n\n    print(feast.__version__)\n\n"
+        image: python:3.8
     exec-process-data:
       container:
         args:
@@ -292,7 +331,7 @@ deploymentSpec:
           \ 'defusedxml==0.7.1' 'deprecation==2.1.0' 'dill==0.3.8' 'distlib==0.3.8'\
           \ 'dnspython==2.6.1' 'docstring_parser==0.16' 'email_validator==2.2.0' 'exceptiongroup==1.2.2'\
           \ 'executing==2.0.1' 'fastapi==0.109.2' 'fastapi-cli==0.0.4' 'fastjsonschema==2.20.0'\
-          \ 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
+          \ 'feast==0.39.1' 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
           \ 'fsspec==2024.6.1' 'google-api-core==2.19.1' 'google-auth==2.32.0' 'google-cloud-core==2.4.1'\
           \ 'google-cloud-storage==2.17.0' 'google-crc32c==1.5.0' 'google-resumable-media==2.7.1'\
           \ 'googleapis-common-protos==1.63.2' 'grpcio==1.64.1' 'gunicorn==22.0.0'\
@@ -349,7 +388,7 @@ deploymentSpec:
           \ os\n    import sys\n    import pandas as pd\n    import subprocess\n \
           \   import pickle\n\n    print(\"processing data...\")\n    with open(os.path.join(input_dir,\
           \ \"ticker_data.pkl\"), \"rb\") as input_file:\n        df_dict = pickle.load(input_file)\n\
-          \n    ndx_ticker = \"I:NDX\"\n    columns_to_process = [\"open\", \"low\"\
+          \n    NDX_TICKER = \"I:NDX\"\n    columns_to_process = [\"open\", \"low\"\
           , \"high\"]\n    n_lags, max_window_size = 5, 5\n\n    def generate_lag_features(df:\
           \ pd.DataFrame, column: str, n_lags: int = 5) -> None:\n        for t in\
           \ range(1, n_lags + 1):\n            df[f\"{column}_lag{t}\"] = df[f\"{column}\"\
@@ -387,12 +426,12 @@ deploymentSpec:
           )\n            dfss = df[\n                df[\"date_i:ndx\"].astype(str).str.contains(\"\
           |\".join(missing_dates))\n            ]\n            dfss.to_parquet(base_path,\
           \ index=False, partition_cols=[\"date_i:ndx\"])\n        else:\n       \
-          \     print(\"exporting 0 files - no new data found\")\n\n    ndx_df = df_dict[ndx_ticker]\n\
-          \    finaldf = create_model_dataset(\n        ndx_df, ndx_ticker, columns_to_process,\
+          \     print(\"exporting 0 files - no new data found\")\n\n    ndx_df = df_dict[NDX_TICKER]\n\
+          \    finaldf = create_model_dataset(\n        ndx_df, NDX_TICKER, columns_to_process,\
           \ df_dict, n_lags, max_window_size\n    )\n\n    os.makedirs(output_dir,\
           \ exist_ok=True)\n    save_data_to_parquet(finaldf, os.path.join(output_dir))\n\
           \    print(f\"{finaldf.shape[0]} records in dataset...\")\n\n"
-        image: python:3.10
+        image: docker.io/library/ython:3.10
     exec-train-model:
       container:
         args:
@@ -417,7 +456,7 @@ deploymentSpec:
           \ 'defusedxml==0.7.1' 'deprecation==2.1.0' 'dill==0.3.8' 'distlib==0.3.8'\
           \ 'dnspython==2.6.1' 'docstring_parser==0.16' 'email_validator==2.2.0' 'exceptiongroup==1.2.2'\
           \ 'executing==2.0.1' 'fastapi==0.109.2' 'fastapi-cli==0.0.4' 'fastjsonschema==2.20.0'\
-          \ 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
+          \ 'feast==0.39.1' 'filelock==3.15.4' 'fonttools==4.53.1' 'fqdn==1.5.1' 'frozenlist==1.4.1'\
           \ 'fsspec==2024.6.1' 'google-api-core==2.19.1' 'google-auth==2.32.0' 'google-cloud-core==2.4.1'\
           \ 'google-cloud-storage==2.17.0' 'google-crc32c==1.5.0' 'google-resumable-media==2.7.1'\
           \ 'googleapis-common-protos==1.63.2' 'grpcio==1.64.1' 'gunicorn==22.0.0'\
@@ -480,20 +519,20 @@ deploymentSpec:
           \ = nn.ReLU()\n            self.fc2 = nn.Linear(hidden_size, output_size)\n\
           \n        def forward(self, x):\n            out = self.fc1(x)\n       \
           \     out = self.relu(out)\n            out = self.fc2(out)\n          \
-          \  return out\n\n    df = pd.read_parquet(os.path.join(input_dir, \"processed_data.parquet\"\
-          ))\n\n    feature_list = sorted(\n        [c for c in df.columns if (\"\
-          lag_\" in c or \"window_\" in c) and \"ndx\" not in c]\n    )\n    features\
-          \ = torch.from_numpy(df[feature_list].values[5:, :].astype(np.float32))\n\
-          \    labels = torch.from_numpy(df[\"open_i:ndx\"].values[5:].astype(np.float32))\n\
-          \n    input_size = features.shape[1]\n    hidden_size = 32\n    output_size\
-          \ = 1\n    model = SimpleNN(input_size, hidden_size, output_size)\n\n  \
-          \  criterion = nn.MSELoss()\n    optimizer = optim.Adam(model.parameters(),\
-          \ lr=0.1)\n\n    num_epochs = 200\n    for epoch in range(num_epochs):\n\
-          \        outputs = model(features)\n        loss = criterion(outputs, labels.view(-1,\
-          \ 1))\n        optimizer.zero_grad()\n        loss.backward()\n        optimizer.step()\n\
-          \n    os.makedirs(output_dir, exist_ok=True)\n    torch.save(model.state_dict(),\
-          \ os.path.join(output_dir, \"model.pth\"))\n\n"
-        image: python:3.10
+          \  return out\n\n    df = pd.read_parquet(input_dir)\n\n    feature_list\
+          \ = sorted(\n        [c for c in df.columns if (\"lag_\" in c or \"window_\"\
+          \ in c) and \"ndx\" not in c]\n    )\n    features = torch.from_numpy(df[feature_list].values[5:,\
+          \ :].astype(np.float32))\n    labels = torch.from_numpy(df[\"open_i:ndx\"\
+          ].values[5:].astype(np.float32))\n\n    input_size = features.shape[1]\n\
+          \    hidden_size = 32\n    output_size = 1\n    model = SimpleNN(input_size,\
+          \ hidden_size, output_size)\n\n    criterion = nn.MSELoss()\n    optimizer\
+          \ = optim.Adam(model.parameters(), lr=0.1)\n\n    num_epochs = 200\n   \
+          \ for epoch in range(num_epochs):\n        outputs = model(features)\n \
+          \       loss = criterion(outputs, labels.view(-1, 1))\n        optimizer.zero_grad()\n\
+          \        loss.backward()\n        optimizer.step()\n\n    os.makedirs(output_dir,\
+          \ exist_ok=True)\n    torch.save(model.state_dict(), os.path.join(output_dir,\
+          \ \"model.pth\"))\n\n"
+        image: docker.io/library/ython:3.10
 pipelineInfo:
   description: Extract, Load, and Transform stock data, then train a model and make
     predictions.
@@ -529,12 +568,32 @@ root:
                 constant: ./data
             model_dir:
               runtimeValue:
-                constant: ./data
+                constant: ./model
             output_dir:
               runtimeValue:
                 constant: ./predictions
         taskInfo:
           name: make-predictions
+      materialize-online-store:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-materialize-online-store
+        dependentTasks:
+        - make-predictions
+        inputs:
+          parameters:
+            data_dir:
+              runtimeValue:
+                constant: ./data
+            model_dir:
+              runtimeValue:
+                constant: ./model
+            output_dir:
+              runtimeValue:
+                constant: ./predictions
+        taskInfo:
+          name: materialize-online-store
       process-data:
         cachingOptions:
           enableCache: true
@@ -566,7 +625,7 @@ root:
                 constant: ./data
             output_dir:
               runtimeValue:
-                constant: ./data
+                constant: ./model
         taskInfo:
           name: train-model
   inputDefinitions:

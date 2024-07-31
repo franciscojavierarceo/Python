@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 init(runner=SubprocessRunner(use_venv=False), pipeline_root="./local_outputs")
-base_image = "python:3.10"
+base_image = "docker.io/library/ython:3.10"
 
 my_requirements = """
 aiohttp==3.9.5
@@ -235,7 +235,7 @@ def fetch_stock_data(api_key: str, output_dir: str) -> None:
     from polygon import RESTClient
 
     print("fetching stock data...")
-    ndx_ticker = "I:NDX"
+    NDX_TICKER = "I:NDX"
     start_date = "2024-01-01"
     output_filename = "ticker_data.pkl"
     log_file = "successful_dates.log"
@@ -306,12 +306,12 @@ def fetch_stock_data(api_key: str, output_dir: str) -> None:
             print("loading stored data...")
             with open(os.path.join(output_dir, output_filename), "rb") as output_file:
                 df_dict = pickle.load(output_file)
-                ndx_df = df_dict[ndx_ticker]
+                ndx_df = df_dict[NDX_TICKER]
         else:
             print("no stored data found, calling polygon api...")
-            ndx_df = pull_stock_data(ndx_ticker, start_date)
+            ndx_df = pull_stock_data(NDX_TICKER, start_date)
             df_dict = pull_all_stock_data(stock_list, start_date)
-            df_dict[ndx_ticker] = ndx_df
+            df_dict[NDX_TICKER] = ndx_df
 
             with open(os.path.join(output_dir, output_filename), "wb") as output_file:
                 pickle.dump(df_dict, output_file)
@@ -339,7 +339,7 @@ def process_data(input_dir: str, output_dir: str) -> None:
     with open(os.path.join(input_dir, "ticker_data.pkl"), "rb") as input_file:
         df_dict = pickle.load(input_file)
 
-    ndx_ticker = "I:NDX"
+    NDX_TICKER = "I:NDX"
     columns_to_process = ["open", "low", "high"]
     n_lags, max_window_size = 5, 5
 
@@ -409,9 +409,9 @@ def process_data(input_dir: str, output_dir: str) -> None:
         else:
             print("exporting 0 files - no new data found")
 
-    ndx_df = df_dict[ndx_ticker]
+    ndx_df = df_dict[NDX_TICKER]
     finaldf = create_model_dataset(
-        ndx_df, ndx_ticker, columns_to_process, df_dict, n_lags, max_window_size
+        ndx_df, NDX_TICKER, columns_to_process, df_dict, n_lags, max_window_size
     )
 
     os.makedirs(output_dir, exist_ok=True)
@@ -445,7 +445,7 @@ def train_model(input_dir: str, output_dir: str) -> None:
             out = self.fc2(out)
             return out
 
-    df = pd.read_parquet(os.path.join(input_dir, "processed_data.parquet"))
+    df = pd.read_parquet(input_dir)
 
     feature_list = sorted(
         [c for c in df.columns if ("lag_" in c or "window_" in c) and "ndx" not in c]
@@ -499,7 +499,7 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
             out = self.fc2(out)
             return out
 
-    df = pd.read_parquet(os.path.join(data_dir, "processed_data.parquet"))
+    df = pd.read_parquet(data_dir)
 
     feature_list = sorted(
         [c for c in df.columns if ("lag_" in c or "window_" in c) and "ndx" not in c]
@@ -538,6 +538,7 @@ def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> 
 os.makedirs("./archive", exist_ok=True)
 os.makedirs("./data", exist_ok=True)
 os.makedirs("./predictions", exist_ok=True)
+os.makedirs("./model", exist_ok=True)
 
 
 # Define the pipeline
@@ -547,19 +548,20 @@ os.makedirs("./predictions", exist_ok=True)
 )
 def stock_data_pipeline(api_key: str) -> None:
     # Use local directories
-    archive_dir = "./archive"
-    data_dir = "./data"
-    predictions_dir = "./predictions"
+    ARCHIVE_DIR = "./archive"
+    DATA_DIR = "./data"
+    PREDICTIONS_DIR = "./predictions"
+    MODEL_DIR = "./model"
 
     # Define pipeline steps
-    fetch_op = fetch_stock_data(api_key=api_key, output_dir=archive_dir)
-    process_op = process_data(input_dir=archive_dir, output_dir=data_dir)
-    train_op = train_model(input_dir=data_dir, output_dir=data_dir)
+    fetch_op = fetch_stock_data(api_key=api_key, output_dir=ARCHIVE_DIR)
+    process_op = process_data(input_dir=ARCHIVE_DIR, output_dir=DATA_DIR)
+    train_op = train_model(input_dir=DATA_DIR, output_dir=MODEL_DIR)
     predict_op = make_predictions(
-        model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
+        model_dir=MODEL_DIR, data_dir=DATA_DIR, output_dir=PREDICTIONS_DIR,
     )
     feast_op = materialize_online_store(
-       model_dir=data_dir, data_dir=data_dir, output_dir=predictions_dir
+       model_dir=MODEL_DIR, data_dir=DATA_DIR, output_dir=PREDICTIONS_DIR,
     )
 
     # Set up dependencies
