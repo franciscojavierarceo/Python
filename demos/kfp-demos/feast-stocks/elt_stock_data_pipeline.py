@@ -26,8 +26,10 @@ stock_list = [
     "NVDA",
     "TSLA",
 ]
-data_directory = "data"
-predictions_directory = "predictions"
+
+ARCHIVE_DIR = "archive"
+DATA_DIRECTORY = "data"
+PREDICTIONS_DIRECTORY = "predictions"
 log_file = "successful_dates.log"
 model_filename = "ndx_model_weights.pth"
 
@@ -288,7 +290,7 @@ def get_latest_data(
             n_lags,
             max_window_size,
         )
-        save_data_to_parquet(newdf, f"{data_directory}/")
+        save_data_to_parquet(newdf, f"{DATA_DIRECTORY}/")
 
         loaded_successful_dates = newdf["date_i:ndx"].astype(str).tolist()
         log_successful_dates(loaded_successful_dates, log_file)
@@ -296,6 +298,9 @@ def get_latest_data(
 
 
 def main():
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
+    os.makedirs(DATA_DIRECTORY, exist_ok=True)
+    os.makedirs(PREDICTIONS_DIRECTORY, exist_ok=True)
     successful_dates = get_successful_dates(log_file)
     dates_to_pull = get_dates_to_pull(start_date, TODAYS_DATE, successful_dates)
 
@@ -315,7 +320,7 @@ def main():
         n_lags,
         max_window_size,
     )
-    save_data_to_parquet(finaldf, f"{data_directory}/")
+    save_data_to_parquet(finaldf, f"{DATA_DIRECTORY}/")
 
     maxdate_val = finaldf["date_i:ndx"].max()
     newdf = get_latest_data(
@@ -352,7 +357,7 @@ def main():
         "run_date",
     ]
     save_data_to_parquet(
-        finaldf[prediction_df_columns_to_save], f"{predictions_directory}/"
+        finaldf[prediction_df_columns_to_save], f"{PREDICTIONS_DIRECTORY}/"
     )
     print(f"latest predictions:\n{finaldf[prediction_df_columns_to_save].tail()}")
 
