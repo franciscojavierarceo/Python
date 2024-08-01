@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 init(runner=SubprocessRunner(use_venv=False), pipeline_root="./local_outputs")
-base_image = "docker.io/library/ython:3.10"
+base_image = "docker.io/library/python:3.10"
 
 my_requirements = """
 aiohttp==3.9.5
@@ -534,13 +534,6 @@ def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> 
     print(feast.__version__)
 
 
-# Create necessary directories
-os.makedirs("./archive", exist_ok=True)
-os.makedirs("./data", exist_ok=True)
-os.makedirs("./predictions", exist_ok=True)
-os.makedirs("./model", exist_ok=True)
-
-
 # Define the pipeline
 @dsl.pipeline(
     name="Stock Data ELT Pipeline",
@@ -552,6 +545,12 @@ def stock_data_pipeline(api_key: str) -> None:
     DATA_DIR = "./data"
     PREDICTIONS_DIR = "./predictions"
     MODEL_DIR = "./model"
+
+    # Create necessary directories
+    os.makedirs(ARCHIVE_DIR, exist_ok=True)
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(PREDICTIONS_DIR, exist_ok=True)
+    os.makedirs(MODEL_DIR, exist_ok=True)
 
     # Define pipeline steps
     fetch_op = fetch_stock_data(api_key=api_key, output_dir=ARCHIVE_DIR)

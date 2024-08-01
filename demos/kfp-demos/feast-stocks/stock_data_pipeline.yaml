@@ -174,7 +174,7 @@ deploymentSpec:
           \    dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)\n\
           \n    ndx_df, df_dict = get_or_load_historical_data(\n        output_dir,\n\
           \        output_filename,\n        start_date,\n    )\n\n"
-        image: docker.io/library/ython:3.10
+        image: docker.io/library/python:3.10
     exec-make-predictions:
       container:
         args:
@@ -277,7 +277,7 @@ deploymentSpec:
           date_i:ndx\", \"open_i:ndx\", \"predictions\", \"run_date\"]]\n    dfss.to_parquet(os.path.join(output_dir,\
           \ \"predictions.parquet\"), index=False)\n    print(f\"predictions =\\n{dfss.tail()}\"\
           )\n\n"
-        image: docker.io/library/ython:3.10
+        image: docker.io/library/python:3.10
     exec-materialize-online-store:
       container:
         args:
@@ -431,7 +431,7 @@ deploymentSpec:
           \ df_dict, n_lags, max_window_size\n    )\n\n    os.makedirs(output_dir,\
           \ exist_ok=True)\n    save_data_to_parquet(finaldf, os.path.join(output_dir))\n\
           \    print(f\"{finaldf.shape[0]} records in dataset...\")\n\n"
-        image: docker.io/library/ython:3.10
+        image: docker.io/library/python:3.10
     exec-train-model:
       container:
         args:
@@ -532,7 +532,7 @@ deploymentSpec:
           \        loss.backward()\n        optimizer.step()\n\n    os.makedirs(output_dir,\
           \ exist_ok=True)\n    torch.save(model.state_dict(), os.path.join(output_dir,\
           \ \"model.pth\"))\n\n"
-        image: docker.io/library/ython:3.10
+        image: docker.io/library/python:3.10
 pipelineInfo:
   description: Extract, Load, and Transform stock data, then train a model and make
     predictions.
