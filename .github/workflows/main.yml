@@ -1,6 +1,10 @@
 name: unit-tests
 
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 jobs:
   unit-test-python:
     runs-on: ${{ matrix.os }}
@@ -31,6 +35,6 @@ jobs:
         run: |
           echo "::set-output name=dir::$(uv cache dir)"
       - name: Install dependencies
-        run: pip install sqlite_vec==v0.0.1-alpha.10
+        run: pip install sqlite_vec==v0.1.0
       - name: run script
         run: python sqlite_vec_demo.py
