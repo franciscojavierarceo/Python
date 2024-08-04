@@ -47,8 +47,7 @@ def main() -> None:
             distance
           FROM vec_items
           WHERE embedding MATCH ?
-          ORDER BY distance
-          LIMIT 3
+          and k = 3
         """,
         [serialize_f32(query)],
     ).fetchall()
