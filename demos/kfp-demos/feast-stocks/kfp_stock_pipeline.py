@@ -1,4 +1,5 @@
 from kfp import dsl
+from kfp.dsl import Output, Input, Dataset, Model, Artifact, InputPath, OutputPath
 from kfp.local import init, SubprocessRunner
 import os
 import sys
@@ -224,7 +225,7 @@ zipp==3.19.2
 
 
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
-def fetch_stock_data(api_key: str, output_dir: str) -> None:
+def fetch_stock_data(api_key: str,  input_dir: str, output_dir: Output[Dataset]) -> None:
     import sys
     import subprocess
     import time
@@ -234,22 +235,27 @@ def fetch_stock_data(api_key: str, output_dir: str) -> None:
     import pandas as pd
     from polygon import RESTClient
 
+    tmp = [k for k in os.environ.keys() if 'access' in k.lower()]
+    print(f"environment variable names: {tmp}")
+
     print("fetching stock data...")
+
     NDX_TICKER = "I:NDX"
-    start_date = "2024-01-01"
+    start_date = "2024-08-01"
+    #start_date = "2024-01-01"
     output_filename = "ticker_data.pkl"
     log_file = "successful_dates.log"
     todays_date = datetime.datetime.now().date().strftime("%Y-%m-%d")
     client = RESTClient(api_key)
     stock_list = [
         "AAPL",
-        "AMZN",
-        "GOOG",
-        "GOOGL",
-        "META",
-        "MSFT",
-        "NVDA",
-        "TSLA",
+        #"AMZN",
+        #"GOOG",
+        #"GOOGL",
+        #"META",
+        #"MSFT",
+        #"NVDA",
+        #"TSLA",
     ]
 
     def get_successful_dates(log_file: str) -> set[str]:
@@ -298,37 +304,46 @@ def fetch_stock_data(api_key: str, output_dir: str) -> None:
         return stock_data_dict
 
     def get_or_load_historical_data(
-        output_dir: str,
+        input_dir: str,
         output_filename: str,
         start_date: str,
     ) -> Tuple[pd.DataFrame, dict]:
-        if output_filename in os.listdir(output_dir):
-            print("loading stored data...")
-            with open(os.path.join(output_dir, output_filename), "rb") as output_file:
+        full_filename = os.path.join(input_dir, output_filename)
+        #if output_filename in os.listdir(input_dir):
+        if True:
+            print(f"loading stored data from {full_filename}...")
+            with open(full_filename, "rb") as output_file:
                 df_dict = pickle.load(output_file)
                 ndx_df = df_dict[NDX_TICKER]
         else:
-            print("no stored data found, calling polygon api...")
+            print(f"no stored data found in {full_filename}, calling polygon api...")
             ndx_df = pull_stock_data(NDX_TICKER, start_date)
             df_dict = pull_all_stock_data(stock_list, start_date)
             df_dict[NDX_TICKER] = ndx_df
 
-            with open(os.path.join(output_dir, output_filename), "wb") as output_file:
+            with open(full_filename, "wb") as output_file:
                 pickle.dump(df_dict, output_file)
         return ndx_df, df_dict
 
     successful_dates = get_successful_dates(log_file)
     dates_to_pull = get_dates_to_pull(start_date, todays_date, successful_dates)
+    fn = os.path.join(output_dir.path)
 
     ndx_df, df_dict = get_or_load_historical_data(
-        output_dir,
+        input_dir,
         output_filename,
         start_date,
     )
 
+    print(f"writing data to {fn}...")
+    with open(fn, "wb") as output_file:
+        pickle.dump(df_dict, output_file)
+
+    print(f"...data output to {fn}")
+
 
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
-def process_data(input_dir: str, output_dir: str) -> None:
+def process_data(input_dir: Input[Dataset], output_dir: Output[Dataset]) -> None:
     import os
     import sys
     import pandas as pd
@@ -336,7 +351,10 @@ def process_data(input_dir: str, output_dir: str) -> None:
     import pickle
 
     print("processing data...")
-    with open(os.path.join(input_dir, "ticker_data.pkl"), "rb") as input_file:
+
+    #input_filename = os.path.join(input_dir, "ticker_data.pkl")
+    input_filename = input_dir.path
+    with open(input_filename, "rb") as input_file:
         df_dict = pickle.load(input_file)
 
     NDX_TICKER = "I:NDX"
@@ -414,13 +432,15 @@ def process_data(input_dir: str, output_dir: str) -> None:
         ndx_df, NDX_TICKER, columns_to_process, df_dict, n_lags, max_window_size
     )
 
-    os.makedirs(output_dir, exist_ok=True)
-    save_data_to_parquet(finaldf, os.path.join(output_dir))
+    #os.makedirs(output_dir, exist_ok=True)
+    #save_data_to_parquet(finaldf, os.path.join(output_dir))
+    finaldf.to_parquet(output_dir.path, index=False, partition_cols=["date_i:ndx"])
+    #save_data_to_parquet(finaldf, output_dir.path)
     print(f"{finaldf.shape[0]} records in dataset...")
 
 
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
-def train_model(input_dir: str, output_dir: str) -> None:
+def train_model(input_dir: Input[Dataset], output_dir: Output[Model]) -> None:
     import sys
     import subprocess
     import torch
@@ -445,7 +465,7 @@ def train_model(input_dir: str, output_dir: str) -> None:
             out = self.fc2(out)
             return out
 
-    df = pd.read_parquet(input_dir)
+    df = pd.read_parquet(input_dir.path)
 
     feature_list = sorted(
         [c for c in df.columns if ("lag_" in c or "window_" in c) and "ndx" not in c]
@@ -469,12 +489,18 @@ def train_model(input_dir: str, output_dir: str) -> None:
         loss.backward()
         optimizer.step()
 
-    os.makedirs(output_dir, exist_ok=True)
-    torch.save(model.state_dict(), os.path.join(output_dir, "model.pth"))
+    #os.makedirs(output_dir, exist_ok=True)
+    torch.save(model.state_dict(), output_dir.path)
+    #torch.save(model.state_dict(), os.path.join(output_dir, "model.pth"))
+    #torch.save(model.state_dict(), model_out.path)
 
 
 @dsl.component(base_image=base_image, packages_to_install=my_requirements)
-def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
+def make_predictions(
+    data_dir: Input[Dataset],
+    model_dir: Input[Model],
+    output_dir: Output[Dataset],
+) -> None:
     import sys
     import subprocess
     import torch
@@ -499,7 +525,7 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
             out = self.fc2(out)
             return out
 
-    df = pd.read_parquet(data_dir)
+    df = pd.read_parquet(data_dir.path)
 
     feature_list = sorted(
         [c for c in df.columns if ("lag_" in c or "window_" in c) and "ndx" not in c]
@@ -511,7 +537,8 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
     hidden_size = 32
     output_size = 1
     model = SimpleNN(input_size, hidden_size, output_size)
-    model.load_state_dict(torch.load(os.path.join(model_dir, "model.pth")))
+    #model.load_state_dict(torch.load(os.path.join(model_dir, "model.pth")))
+    model.load_state_dict(torch.load(model_dir.path))
     model.eval()
 
     with torch.no_grad():
@@ -521,30 +548,36 @@ def make_predictions(model_dir: str, data_dir: str, output_dir: str) -> None:
     df.loc[5:, "predictions"] = predictions.numpy()
     df["run_date"] = datetime.datetime.now().date().strftime("%Y-%m-%d")
 
-    os.makedirs(output_dir, exist_ok=True)
+    #os.makedirs(output_dir, exist_ok=True)
     dfss = df[["date_i:ndx", "open_i:ndx", "predictions", "run_date"]]
-    dfss.to_parquet(os.path.join(output_dir, "predictions.parquet"), index=False)
-    print(f"predictions =\n{dfss.tail()}")
+    #dfss.to_parquet(os.path.join(output_dir, "predictions.parquet"), index=False)
+    dfss.to_parquet(output_dir.path, index=False)
+    print(f"\npredictions =\n{dfss.tail()}")
 
 
-@dsl.component#(packages_to_install=my_requirements)
-def materialize_online_store(model_dir: str, data_dir: str, output_dir: str) -> None:
+@dsl.component(packages_to_install=my_requirements)
+def materialize_online_store(input_path: InputPath('Dataset')) -> None:
     import feast
 
     print(feast.__version__)
+    print(input_path)
 
 
 # Define the pipeline
 @dsl.pipeline(
     name="Stock Data ELT Pipeline",
     description="Extract, Load, and Transform stock data, then train a model and make predictions.",
+    pipeline_root="./",
 )
 def stock_data_pipeline(api_key: str) -> None:
+    import os
     # Use local directories
     ARCHIVE_DIR = "./archive"
     DATA_DIR = "./data"
     PREDICTIONS_DIR = "./predictions"
     MODEL_DIR = "./model"
+    tmp = [k for k in os.environ.keys() if 'access' in k.lower()]
+    print(f"environment variable names: {tmp}")
 
     # Create necessary directories
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
@@ -552,15 +585,23 @@ def stock_data_pipeline(api_key: str) -> None:
     os.makedirs(PREDICTIONS_DIR, exist_ok=True)
     os.makedirs(MODEL_DIR, exist_ok=True)
 
-    # Define pipeline steps
-    fetch_op = fetch_stock_data(api_key=api_key, output_dir=ARCHIVE_DIR)
-    process_op = process_data(input_dir=ARCHIVE_DIR, output_dir=DATA_DIR)
-    train_op = train_model(input_dir=DATA_DIR, output_dir=MODEL_DIR)
+    # This step always requires an explicit folder and won't behave if you use the artifacts
+    fetch_op = fetch_stock_data(
+        api_key=api_key,
+        input_dir=ARCHIVE_DIR,
+    )
+    process_op = process_data(
+        input_dir=fetch_op.outputs['output_dir'],
+    )
+    train_op = train_model(
+        input_dir=process_op.outputs['output_dir'],
+    )
     predict_op = make_predictions(
-        model_dir=MODEL_DIR, data_dir=DATA_DIR, output_dir=PREDICTIONS_DIR,
+        data_dir=process_op.outputs['output_dir'],
+        model_dir=train_op.outputs['output_dir'],
     )
     feast_op = materialize_online_store(
-       model_dir=MODEL_DIR, data_dir=DATA_DIR, output_dir=PREDICTIONS_DIR,
+       input_path=process_op.outputs['output_dir'],
     )
 
     # Set up dependencies
@@ -575,7 +616,7 @@ def stock_data_pipeline(api_key: str) -> None:
 if __name__ == "__main__":
     from kfp.compiler import Compiler
 
-    Compiler().compile(stock_data_pipeline, "stock_data_pipeline.yaml")
+    #Compiler().compile(stock_data_pipeline, "stock_data_pipeline.yaml")
 
     # Execute the pipeline directly
     stock_data_pipeline(api_key=os.environ["POLYGON_API_KEY"])
