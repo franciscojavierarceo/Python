@@ -10,6 +10,7 @@ OUTFILE = "labeled_CISI_IR_data.pickle"
 DATA_PATH = "nlp_retrieval_dataset/"
 SHORT_EXAMPLE_INDEX = 111
 
+
 def parse_documents(file_path: str) -> Dict[int, str]:
     with open(file_path, "r") as file:
         lines = ""
@@ -171,6 +172,7 @@ def load_processed_data() -> Dict:
     print(json.dumps(processed_message_data[SHORT_EXAMPLE_INDEX], indent=2))
     return processed_message_data
 
+
 def process_and_save_raw_data(message_data: Dict) -> Dict:
     for query_id in message_data:
         try:
@@ -185,15 +187,17 @@ def process_and_save_raw_data(message_data: Dict) -> Dict:
 
     return message_data
 
+
 def format_data_for_training(message_data: Dict) -> Dict:
     output_data = {}
     for query_id in message_data:
         output_data[query_id] = message_data[query_id]
-        output_data[query_id]['messages'].append(
-            {'role': 'assistant', 'content': message_data[query_id]['answer']}
+        output_data[query_id]["messages"].append(
+            {"role": "assistant", "content": message_data[query_id]["answer"]}
         )
-        del output_data[query_id]['answer']
+        del output_data[query_id]["answer"]
     return output_data
+
 
 def main():
     if OUTFILE in os.listdir():
