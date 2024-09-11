@@ -7,6 +7,7 @@ from openai import OpenAI
 from typing import Dict, List, Tuple
 
 OUTFILE = "labeled_CISI_IR_data.pickle"
+TRAINING_OUTFILE = "raft_training_data.jsonl"
 DATA_PATH = "nlp_retrieval_dataset/"
 SHORT_EXAMPLE_INDEX = 111
 
@@ -189,7 +190,7 @@ def process_and_save_raw_data(message_data: Dict) -> Dict:
     return message_data
 
 
-def format_data_for_training(message_data: Dict) -> Dict:
+def format_and_export_data_for_training(message_data: Dict) -> Dict:
     output_data = {}
     for query_id in message_data:
         output_data[query_id] = message_data[query_id]
@@ -197,6 +198,14 @@ def format_data_for_training(message_data: Dict) -> Dict:
             {"role": "assistant", "content": message_data[query_id]["answer"]}
         )
         del output_data[query_id]["answer"]
+
+    if TRAINING_OUTFILE not in os.listdir():
+        with open(TRAINING_OUTFILE, "w") as outfile:
+            for query_id in output_data:
+                json.dump(output_data[query_id], outfile)
+                outfile.write("\n")
+        print(f"export training data to {TRAINING_OUTFILE}")
+
     return output_data
 
 
@@ -207,7 +216,9 @@ def main():
         raw_message_data = load_raw_data()
         processed_message_data = process_and_save_raw_data(raw_message_data)
 
-    formatted_training_data = format_data_for_training(processed_message_data)
+    formatted_training_data = format_and_export_data_for_training(
+        processed_message_data
+    )
     print("*" * 30)
     print("formatted data")
     print("*" * 30)
