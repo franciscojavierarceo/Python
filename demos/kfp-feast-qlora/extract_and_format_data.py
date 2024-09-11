@@ -130,7 +130,7 @@ def format_all_articles_into_messages(
 Please use the article(s) below to either respond to the query or answer the question if applicable. Don't mention the article title and please be brief.
 
 --- Begin articles ---
-{relevant_docs}
+{relevant_docs} -- note the deleted "answer" key
 --- End articles ---
 
 """
