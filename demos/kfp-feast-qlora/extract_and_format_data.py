@@ -174,6 +174,7 @@ def load_processed_data() -> Dict:
 
 
 def process_and_save_raw_data(message_data: Dict) -> Dict:
+    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
     for query_id in message_data:
         try:
             completion = client.chat.completions.create(
