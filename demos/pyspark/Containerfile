@@ -1,0 +1,21 @@
+# Use the official Spark image from Bitnami
+FROM docker.io/bitnami/spark:latest
+
+# Switch to root to install packages
+USER root
+
+# Install necessary Python packages
+RUN pip install pandas numpy
+
+# Copy the application code into the container
+COPY app.py /app/app.py
+
+# Set the working directory
+WORKDIR /app
+
+# Expose ports if needed (optional)
+EXPOSE 4040
+
+# Set the entry point to run the PySpark job
+ENTRYPOINT ["spark-submit", "app.py"]
+
