@@ -6,4 +6,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: memcached-sample
 spec:
-  # TODO(user): Add fields here
+  # TODO(user): edit teh following value to ensure the number 
+  # of Pods/Instances your Operand must have on cluster 
+  size: 1
