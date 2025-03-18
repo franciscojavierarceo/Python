@@ -26,8 +26,7 @@ put it together.
 
 The pipeilne has 4 major components
 
-1. Fetch the data
- - Check if cached
+1. Fetch the data (check if cached)
 2. Process the data
 3. Train the model
 4. Score the data
